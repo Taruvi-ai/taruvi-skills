@@ -1,6 +1,11 @@
 ---
 name: taruvi-database
-description: Use when building or optimizing Taruvi database queries, datatable CRUD screens, dashboard aggregations, KPI cards, filtered lists, sorting, pagination, graph relationships, or useList/useOne/useCreate/useUpdate/useDelete hooks with the Taruvi data provider.
+description: >
+  Use this skill when the user is building or optimizing data-driven screens
+  backed by Taruvi datatables — list pages, detail views, dashboard KPI cards,
+  summary charts, filtered tables, or graph relationship queries. Also use when
+  the user has performance issues with multiple queries that could be replaced
+  by a single aggregate, even if they don't mention "database" directly.
 metadata:
   author: taruvi-ai
   version: "1.0.0"
@@ -30,6 +35,16 @@ Reference module for all Taruvi datatable and database query work — covering R
    - **Related data** → graph options with `include`/`depth` meta keys
 3. Apply the preference order: one aggregate query over multiple filtered queries for summary pages.
 4. Validate the query shape scales — avoid N+1 patterns.
+
+### Verification checklist
+
+After writing queries, verify:
+
+- [ ] Dashboard/summary views use one `aggregate + groupBy` query, not N separate filtered queries
+- [ ] All list UIs include `pagination` with a reasonable `pageSize`
+- [ ] Graph queries have an explicit `depth` limit
+- [ ] `having` is only used after a `groupBy`, never as a substitute for `filters`
+- [ ] No N+1 patterns (e.g., looping `useOne` calls inside a list render)
 
 ## Examples
 
@@ -64,12 +79,14 @@ meta: {
 }
 ```
 
-## Edge Cases
+## Gotchas
 
-- **Multiple status queries for a dashboard** — if you see separate `useList` calls per status to build a summary, that is a performance bug. Replace with one `groupBy` query.
-- **Graph data without depth limit** — always set `depth` when using graph/edge queries to avoid unbounded traversal.
-- **`having` without `groupBy`** — `having` only works after a `groupBy`. It is not a substitute for a `filters` clause.
-- **Large datasets without pagination** — always add `pagination` for list UIs. Unbounded queries will time out.
+- **N separate queries for a dashboard** — if you see separate `useList` calls per status/category to build a summary, that is a performance bug. Replace with one `groupBy` query. This is the single most common mistake.
+- **Graph data without depth limit** — always set `depth` when using graph/edge queries. Without it, the query traverses unbounded relationships and will time out on any non-trivial dataset.
+- **`having` without `groupBy`** — `having` only works after a `groupBy`. It is not a substitute for a `filters` clause. Using `having` alone silently returns no results.
+- **Large datasets without pagination** — always add `pagination` for list UIs. Unbounded queries will time out on tables with >1000 rows.
+- **`aggregate` expects an array** — `aggregate: "count"` will fail silently. Use `aggregate: ["count"]`.
+- **Filter operator typos** — the operator is `"eq"`, not `"equals"` or `"="`. Common operators: `eq`, `ne`, `lt`, `gt`, `lte`, `gte`, `contains`, `in`.
 
 ## References
 

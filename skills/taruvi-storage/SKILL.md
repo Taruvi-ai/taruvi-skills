@@ -1,6 +1,11 @@
 ---
 name: taruvi-storage
-description: Use when working with Taruvi object storage — bucket creation, file upload, file download, metadata, visibility (public/private), batch upload, batch delete, prefix filtering, quota monitoring, storageDataProvider, useCreate for uploads, or useDeleteMany for bulk deletes.
+description: >
+  Use this skill when the user needs to upload, download, list, or manage files
+  in Taruvi storage — including building file managers, attachment lists, media
+  galleries, configuring buckets, handling visibility, batch operations, or
+  showing quota usage. Also use when the user is working with file-related UI
+  and needs the storageDataProvider, even if they don't mention "storage."
 metadata:
   author: taruvi-ai
   version: "1.0.0"
@@ -32,6 +37,17 @@ Reference module for Taruvi storage workflows — bucket management, object uplo
    - **List with filters** → GET with query params (`prefix`, `mimetype`, `size__gte`, etc.)
 3. Set bucket `visibility` at the bucket level; override per-object only when needed.
 4. For quota-aware UX, call the usage endpoint and display a warning — do not rely on upload blocking.
+
+### Verification checklist
+
+After writing storage code, verify:
+
+- [ ] Bucket has `app_category` set (`assets` or `attachments`)
+- [ ] `allowed_mime_types` is configured if the bucket should restrict file types
+- [ ] Batch uploads are split into chunks of ≤10 files / ≤100MB
+- [ ] Batch deletes are split into chunks of ≤100 paths
+- [ ] Upload UI warns users when overwriting an existing path (upsert behavior)
+- [ ] Quota usage is surfaced as a warning, not as an upload blocker
 
 ## Examples
 
@@ -70,14 +86,16 @@ const { data } = useList({
 });
 ```
 
-## Edge Cases
+## Gotchas
 
-- **Uploading to an existing path** — upsert behavior: the object is replaced silently. Warn users in UI if overwrite is unintentional.
-- **Visibility mismatch** — per-object visibility overrides the bucket default. If a public bucket has a private file, the file stays private.
-- **Batch upload limit** — max 10 files and 100MB per batch-upload call. Split larger sets into multiple calls.
-- **Batch delete limit** — max 100 paths per batch-delete call. Paginate for larger deletes.
-- **Quota** — quotas are advisory (monitoring/alerting), not hard upload blockers. Surface the usage warning in UX rather than preventing upload.
-- **`allowed_mime_types`** — supports wildcards (`image/*`) and exact values. Misconfigured buckets silently reject uploads at the API level.
+- **Uploading to an existing path** — upsert behavior: the object is replaced silently with no warning from the API. Always warn users in UI if overwrite is unintentional.
+- **Visibility mismatch** — per-object visibility overrides the bucket default. A `private` file in a `public` bucket stays private. This is the most common source of "why can't I access this file" bugs.
+- **Batch upload limit** — max 10 files and 100MB per batch-upload call. Exceeding either limit returns a 400 with no partial success. Split larger sets into multiple calls.
+- **Batch delete limit** — max 100 paths per batch-delete call. Unlike upload, batch delete supports partial success — some paths may delete while others fail.
+- **Quota is advisory** — quotas are monitoring/alerting only, not hard upload blockers. The API will accept uploads even when quota is exceeded. Surface the usage warning in UX rather than preventing upload.
+- **`allowed_mime_types` rejects silently** — if a bucket has `allowed_mime_types: ["image/*"]` and you upload a PDF, the API rejects it with a generic 400. The error message does not mention MIME types. Check bucket config first when uploads fail.
+- **Missing `app_category`** — bucket creation requires `app_category` (`assets` or `attachments`). Omitting it returns a validation error, not a helpful message.
+- **`dataProviderName: "storage"` is required** — forgetting `dataProviderName` on `useCreate`/`useList`/`useDeleteMany` routes the call to the default (database) provider, which returns confusing "resource not found" errors.
 
 ## References
 
