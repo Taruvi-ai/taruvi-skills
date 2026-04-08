@@ -1,11 +1,15 @@
 ---
 name: taruvi-app-developer
 description: >
-  Use this skill when the user is building, modifying, debugging, or deploying
-  a Taruvi-powered application — even if they don't mention "Taruvi" directly.
-  Activate whenever you see @taruvi/sdk, @taruvi/refine-providers, TARUVI_API_KEY,
-  sdk_client, taruvi.cloud, or Taruvi provider/function code in the project.
-  This is the entry-point skill — always read it before any other Taruvi skill.
+  Use this skill when the user wants to build, add features to, debug, or
+  deploy a web application that uses Taruvi as its backend — including CRUD
+  pages, dashboards, file uploads, serverless functions, auth, or access
+  control. Activate on any app-building request when the project contains
+  @taruvi/sdk, @taruvi/refine-providers, TARUVI_API_KEY, sdk_client, or
+  taruvi.cloud in its files. Also activate when the user mentions Taruvi,
+  Refine providers, dataProvider, storageDataProvider, appDataProvider,
+  userDataProvider, or sdk_client. Always read this skill first before
+  loading any other Taruvi skill.
 metadata:
   author: taruvi-ai
   version: "1.0.0"
