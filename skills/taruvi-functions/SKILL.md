@@ -1,5 +1,5 @@
 ---
-name: functions
+name: taruvi-functions
 description: Use when writing, editing, or debugging Taruvi serverless functions. Covers APP/PROXY/SYSTEM execution modes, sdk_client usage, manage_function, executeFunction, executeFunctionAsync, event-driven triggers, scheduled cron jobs, multi-resource orchestration, async long-running tasks, and webhook forwarding.
 metadata:
   author: taruvi-ai

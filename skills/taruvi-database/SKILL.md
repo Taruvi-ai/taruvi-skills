@@ -1,5 +1,5 @@
 ---
-name: database
+name: taruvi-database
 description: Use when building or optimizing Taruvi database queries, datatable CRUD screens, dashboard aggregations, KPI cards, filtered lists, sorting, pagination, graph relationships, or useList/useOne/useCreate/useUpdate/useDelete hooks with the Taruvi data provider.
 metadata:
   author: taruvi-ai
@@ -19,7 +19,7 @@ Reference module for all Taruvi datatable and database query work — covering R
 - Implementing `groupBy`, `aggregate`, or `having` for grouped metrics
 - Modeling graph relationships between datatables
 
-**Do not use this skill for:** raw storage file queries (use `storage` skill), user management CRUD (use `refine-providers` skill with `userDataProvider`), or multi-resource operations (use `functions` skill).
+**Do not use this skill for:** raw storage file queries (use `taruvi-storage` skill), user management CRUD (use `taruvi-refine-providers` skill with `userDataProvider`), or multi-resource operations (use `taruvi-functions` skill).
 
 ## Step-by-Step Instructions
 

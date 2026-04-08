@@ -67,17 +67,17 @@ Only load modules relevant to the task. Use your file reading tool to open and r
 
 | Task | Read this file |
 |---|---|
-| Writing, editing, or debugging a serverless function | Open and read `.codex/skills/functions/SKILL.md` |
-| Building or refactoring frontend provider/hook code | Open and read `.codex/skills/refine-providers/SKILL.md` |
-| Building or optimizing data queries, dashboards, aggregations | Open and read `.codex/skills/database/SKILL.md` |
-| Adding or changing file upload/download/storage features | Open and read `.codex/skills/storage/SKILL.md` |
+| Writing, editing, or debugging a serverless function | Open and read `.codex/skills/taruvi-functions/SKILL.md` |
+| Building or refactoring frontend provider/hook code | Open and read `.codex/skills/taruvi-refine-providers/SKILL.md` |
+| Building or optimizing data queries, dashboards, aggregations | Open and read `.codex/skills/taruvi-database/SKILL.md` |
+| Adding or changing file upload/download/storage features | Open and read `.codex/skills/taruvi-storage/SKILL.md` |
 | Task touches 2+ of the above | Open and read all relevant SKILL.md files |
 
 ## Examples
 
 **Greenfield:** User says "build me an employee directory". Read references, wire `dataProvider` and `userDataProvider`, scaffold list/detail pages with Refine hooks. No function needed (single-resource CRUD).
 
-**Existing app refactor:** User says "the cascade delete is broken". Read existing delete handler first, detect multi-resource pattern (tasks + attachments + activities), route to `functions/SKILL.md` and rewrite as a serverless function.
+**Existing app refactor:** User says "the cascade delete is broken". Read existing delete handler first, detect multi-resource pattern (tasks + attachments + activities), route to `taruvi-functions/SKILL.md` and rewrite as a serverless function.
 
 **Deploy task:** User says "deploy the frontend". Read `references/frontend-worker-deploy.md`, follow build → zip → deploy flow.
 
@@ -86,7 +86,7 @@ Only load modules relevant to the task. Use your file reading tool to open and r
 - **Unclear mode** — when signals are mixed, ask the user: "Is this a new app or does it already have Taruvi providers set up?"
 - **Task spans multiple modules** — load all relevant SKILL.md files before starting; don't guess from memory.
 - **Function vs provider unclear** — default to a function whenever there is any cross-resource side effect, even if it seems minor.
-- **Existing code uses deprecated providers** — flag `functionsDataProvider`/`analyticsDataProvider` as deprecated; migrate to `appDataProvider + useCustom`.
+- **Existing code uses deprecated providers** — flag `functionsDataProvider`/`analyticsDataProvider` as deprecated; migrate to `appDataProvider + useCustom`. See `taruvi-refine-providers` skill for migration notes.
 
 ## References
 

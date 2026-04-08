@@ -1,5 +1,5 @@
 ---
-name: storage
+name: taruvi-storage
 description: Use when working with Taruvi object storage — bucket creation, file upload, file download, metadata, visibility (public/private), batch upload, batch delete, prefix filtering, quota monitoring, storageDataProvider, useCreate for uploads, or useDeleteMany for bulk deletes.
 metadata:
   author: taruvi-ai
@@ -20,7 +20,7 @@ Reference module for Taruvi storage workflows — bucket management, object uplo
 - Applying prefix/MIME/size/date filters to object listings
 - Surfacing bucket quota usage in the UI
 
-**Do not use this skill for:** database table CRUD (use `database` skill), user data (use `refine-providers` skill), or multi-resource storage + database operations (use `functions` skill).
+**Do not use this skill for:** database table CRUD (use `taruvi-database` skill), user data (use `taruvi-refine-providers` skill), or multi-resource storage + database operations (use `taruvi-functions` skill).
 
 ## Step-by-Step Instructions
 

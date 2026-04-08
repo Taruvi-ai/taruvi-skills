@@ -1,5 +1,5 @@
 ---
-name: refine-providers
+name: taruvi-refine-providers
 description: Use when setting up or working with Taruvi Refine providers — dataProvider, storageDataProvider, appDataProvider, userDataProvider, authProvider, accessControlProvider, @taruvi/refine-providers, @taruvi/sdk Client setup, useList, useCreate, useCustom, useCan, authProvider login flow, or access control batching.
 metadata:
   author: taruvi-ai
@@ -20,7 +20,7 @@ Reference module for wiring and using Taruvi's Refine data providers in the fron
 - Migrating from deprecated `functionsDataProvider` / `analyticsDataProvider`
 - Debugging auth errors (401/403), token refresh, or access control resolution
 
-**Do not use this skill for:** Python function authoring (use `functions` skill), storage REST endpoints (use `storage` skill), or raw database query optimization (use `database` skill).
+**Do not use this skill for:** Python function authoring (use `taruvi-functions` skill), storage REST endpoints (use `taruvi-storage` skill), or raw database query optimization (use `taruvi-database` skill).
 
 ## Step-by-Step Instructions
 
