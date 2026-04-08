@@ -43,8 +43,8 @@ Each skill follows the standard format:
 
 ```
 <skill-name>/
-  SKILL.md            # Frontmatter (name, description) + instructions
-  reference/*.md      # Supporting reference documents
+  SKILL.md              # Frontmatter (name, description) + instructions
+  references/*.md       # Supporting reference documents
 ```
 
 The `skills/` directory is auto-discovered by the `npx skills` CLI.
