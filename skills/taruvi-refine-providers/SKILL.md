@@ -30,15 +30,23 @@ Reference module for wiring and using Taruvi's Refine data providers in the fron
 
 ## Step-by-Step Instructions
 
-1. Open and read `references/overview.md` for client setup and provider name map.
-2. Open and read `references/provider-map.md` for per-provider behavior details.
-3. Install dependencies:
+1. Open and read `references/overview.md` — install, quick-start, providers at a glance.
+2. Open and read `references/provider-map.md` — routing guide to individual provider files.
+3. Open and read the specific provider reference(s) for the task:
+   - Database CRUD / filters / aggregation / graph → `references/database-provider.md`
+   - File upload / download / storage → `references/storage-provider.md`
+   - Functions / analytics / roles / secrets → `references/app-provider.md`
+   - User management → `references/user-provider.md`
+   - Login / logout / token flow → `references/auth-provider.md`
+   - Permissions / `useCan` / `CanAccess` → `references/access-control-provider.md`
+   - TypeScript types / utilities / deprecated migration → `references/types-and-utilities.md`
+4. Install dependencies:
    ```bash
    npm install @taruvi/refine-providers @taruvi/sdk @refinedev/core
    ```
-4. Create the SDK client with `apiKey`, `appSlug`, and `baseUrl`.
-5. Wire all relevant providers into `<Refine>`.
-6. Use provider-native hooks (`useList`, `useCreate`, `useCustom`, `useCan`) — do not call REST directly from components.
+5. Create the SDK client with `apiKey`, `appSlug`, and `apiUrl`.
+6. Wire all relevant providers into `<Refine>`.
+7. Use provider-native hooks (`useList`, `useCreate`, `useCustom`, `useCan`) — do not call REST directly from components.
 
 ### Verification checklist
 
@@ -114,5 +122,12 @@ const { data: canEdit } = useCan({
 
 ## References
 
-- `references/overview.md` — install, client setup, provider name map
-- `references/provider-map.md` — per-provider behavior, auth flow, access control batching, types, migration notes
+- `references/overview.md` — install, quick-start, providers at a glance
+- `references/provider-map.md` — routing guide to individual provider files
+- `references/database-provider.md` — CRUD, filters, operators, sorting, pagination, aggregation, graph
+- `references/storage-provider.md` — upload, batch upload, delete, metadata, filters
+- `references/app-provider.md` — roles, settings, secrets, function execution, analytics
+- `references/user-provider.md` — user CRUD, roles, apps
+- `references/auth-provider.md` — login/logout/register, token flow, identity, permissions
+- `references/access-control-provider.md` — useCan, CanAccess, entity type resolution, batching
+- `references/types-and-utilities.md` — TaruviMeta, StorageUploadVariables, utility functions, deprecated migration
