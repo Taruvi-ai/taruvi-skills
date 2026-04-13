@@ -94,6 +94,21 @@ const { data } = useCustom({
 });
 ```
 
+For KPI/reporting dashboards, prefer analytics queries over fetching raw datatable rows and deriving aggregates in React.
+
+**Dashboard example:**
+```tsx
+const { result: summaryResult } = useCustom({
+  dataProviderName: "app",
+  url: "hrms-dashboard-summary",
+  method: "post",
+  config: { payload: {} },
+  meta: { kind: "analytics" },
+});
+
+const summary = summaryResult.data?.[0];
+```
+
 ## Meta Types
 
 ```tsx

@@ -32,6 +32,10 @@ Reference module for wiring and using Taruvi's Refine data providers in the fron
 
 1. Open and read `references/overview.md` — install, quick-start, providers at a glance.
 2. Open and read `references/provider-map.md` — routing guide to individual provider files.
+3. Identify the current non-deprecated package API in the installed version before choosing a provider/hook pattern.
+   - Never introduce new usage of deprecated package APIs.
+   - If docs, old code, or examples conflict with the installed package, follow the installed non-deprecated path.
+   - If the only path that appears to work is deprecated, stop and fix the provider/docs instead of baking that path into new UI code.
 3. Open and read the specific provider reference(s) for the task:
    - Database CRUD / filters / aggregation / graph → `references/database-provider.md`
    - File upload / download / storage → `references/storage-provider.md`
@@ -56,7 +60,8 @@ After wiring providers, verify:
 - [ ] All four data providers are wired: `default`, `storage`, `app`, `user`
 - [ ] `authProvider` and `accessControlProvider` are both passed to `<Refine>`
 - [ ] No direct REST/fetch calls from components — all data flows through hooks
-- [ ] No use of deprecated `functionsDataProvider` or `analyticsDataProvider`
+- [ ] No new usage of deprecated package APIs
+- [ ] The chosen provider/hook path matches the installed package’s current non-deprecated API
 - [ ] `useCustom` calls for functions use `dataProviderName: "app"` and `meta.kind: "function"`
 
 ## Examples
@@ -113,6 +118,7 @@ const { data: canEdit } = useCan({
 ## Gotchas
 
 - **Deprecated providers** — `functionsDataProvider` and `analyticsDataProvider` are removed. Migrate to `appDataProvider` + `useCustom` with `meta.kind: "function"` or `meta.kind: "analytics"`. Old imports will compile but throw at runtime.
+- **Deprecated package path in new code** — do not add new code on deprecated providers or compatibility helpers just because old examples still exist. Use the installed package’s current canonical API surface.
 - **Auth redirect loop** — `authProvider.login()` redirects to `/accounts/login/` and tokens come back in the URL hash. Do not try to intercept mid-redirect or parse the URL yourself — the provider handles it.
 - **401 vs 403 confusion** — `onError()` handles both: 401 means session expired (trigger re-login), 403 means authenticated but forbidden (show access denied). Treating 403 as 401 causes infinite re-login loops.
 - **Access control entity type** — `useCan` resolves the entity type in this order: `params.entityType` → `resource.meta.entityType` → resource name. If permissions seem wrong, the entity type is almost always the cause — check the resolution chain.

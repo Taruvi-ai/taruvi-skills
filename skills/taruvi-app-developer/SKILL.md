@@ -47,6 +47,15 @@ Open and read `references/runtime-and-packages.md` before writing any code.
 
 For deploy tasks, ask the user for their deploy target and workflow details.
 
+### Step 2.5 — Identify the Current Package API
+
+Before writing code against Taruvi packages, identify the current non-deprecated API surface in the installed package for this repo.
+
+- Never introduce new usage of deprecated package APIs.
+- If old examples, README snippets, or existing code use deprecated providers or hooks, do not copy them into new work.
+- If the canonical path is unclear, resolve that before building the feature.
+- If the only apparent working path is deprecated, treat that as a provider/docs issue to fix before finalizing the app code.
+
 ### Step 3 — Decide: Function or Provider?
 
 Answer this question before routing:
@@ -84,6 +93,16 @@ Only load modules relevant to the task. Use your file reading tool to open and r
 
 Find and read the `SKILL.md` for the required skill. Do not hardcode a path — use your file search tool to locate it.
 
+### Step 5 — Decide Dashboard Query Strategy Explicitly
+
+If the task includes a dashboard, KPI cards, trends, reporting, or an executive summary, make an explicit choice before coding:
+
+- **Analytics-backed dashboard** → default for KPI-first, executive, reporting, and trend pages
+- **Datatable aggregate/groupBy** → acceptable for lightweight operational summaries when a saved analytics query would be unnecessary
+- **Row query + derive in React** → only acceptable when the UI primarily renders rows and the summary is incidental
+
+For summary-first pages, do not skip this decision. Record it in your implementation notes or plan.
+
 ## Examples
 
 **Greenfield:** User says "build me an employee directory". Read references, wire `dataProvider` and `userDataProvider`, scaffold list/detail pages with Refine hooks. No function needed (single-resource CRUD).
@@ -98,6 +117,8 @@ Find and read the `SKILL.md` for the required skill. Do not hardcode a path — 
 - **Task spans multiple modules** — load all relevant SKILL.md files before starting; don't guess from memory.
 - **Function vs provider unclear** — default to a function whenever there is any cross-resource side effect, even if it seems minor.
 - **Existing code uses deprecated providers** — flag `functionsDataProvider`/`analyticsDataProvider` as deprecated; migrate to `appDataProvider + useCustom`. See `taruvi-refine-providers` skill for migration notes.
+- **Dashboard implementation unclear** — if the page is KPI-first or reporting-heavy, default to analytics queries through the `app` provider. Do not fetch full row sets into React just to compute cards and charts.
+- **Package API unclear** — use the installed package’s current non-deprecated API surface. Do not normalize deprecated and current patterns together in new code.
 
 ## References
 
