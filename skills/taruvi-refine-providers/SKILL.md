@@ -64,13 +64,11 @@ Use this matrix for the current non-deprecated provider surface:
 
 ## Step-by-Step Instructions
 
-1. Open and read `references/overview.md` — install, quick-start, providers at a glance.
-2. Open and read `references/provider-map.md` — routing guide to individual provider files.
-3. Identify the current non-deprecated package API in the installed version before choosing a provider/hook pattern.
-   - Never introduce new usage of deprecated package APIs.
-   - If docs, old code, or examples conflict with the installed package, follow the installed non-deprecated path.
-   - If the only path that appears to work is deprecated, stop and fix the provider/docs instead of baking that path into new UI code.
-3. Open and read the specific provider reference(s) for the task:
+1. Open and read `references/overview.md` — install, quick-start, provider map at a glance.
+2. Open and read the specific provider reference(s) for the task:
+
+   **Important:** Identify the current non-deprecated package API before choosing a provider/hook pattern. Never introduce new usage of deprecated APIs. If the only path that appears to work is deprecated, fix the provider/docs first.
+
    - Database CRUD / filters / aggregation / graph → `references/database-provider.md`
    - File upload / download / storage → `references/storage-provider.md`
    - Functions / analytics / roles / secrets → `references/app-provider.md`
@@ -140,7 +138,7 @@ import {
 const client = new Client({
   apiKey: import.meta.env.VITE_TARUVI_API_KEY,
   appSlug: import.meta.env.VITE_TARUVI_APP_SLUG,
-  baseUrl: import.meta.env.VITE_TARUVI_BASE_URL,
+  apiUrl: import.meta.env.VITE_TARUVI_API_URL,
 });
 
 <Refine
@@ -330,12 +328,11 @@ Refine operator keys supported by the Taruvi provider mapping:
 
 ## References
 
-- `references/overview.md` — install, quick-start, providers at a glance
-- `references/provider-map.md` — routing guide to individual provider files
+- `references/overview.md` — install, quick-start, provider map
 - `references/database-provider.md` — CRUD, filters, operators, sorting, pagination, aggregation, graph
 - `references/storage-provider.md` — upload, batch upload, delete, metadata, filters
 - `references/app-provider.md` — roles, settings, secrets, function execution, analytics
 - `references/user-provider.md` — user CRUD, roles, apps
 - `references/auth-provider.md` — login/logout/register, token flow, identity, permissions
-- `references/access-control-provider.md` — useCan, CanAccess, entity type resolution, batching
+- `references/access-control-provider.md` — useCan, CanAccess, prefixed ACL resources, batching
 - `references/types-and-utilities.md` — TaruviMeta, StorageUploadVariables, utility functions, deprecated migration

@@ -29,7 +29,7 @@ Reference module for Taruvi storage workflows — bucket management, object uplo
 
 ## Step-by-Step Instructions
 
-1. Open and read `references/storage.md` for the full API reference.
+1. Open and read `../taruvi-refine-providers/references/storage-provider.md` for the full storage API reference (upload, download, list, filters, metadata, batch operations).
 2. Identify the operation needed:
    - **Single upload** → `PUT|POST /api/apps/{app_slug}/storage/buckets/{bucket}/objects/{key}`
    - **Bulk upload** → batch-upload endpoint (max 10 files / 100MB per call)
@@ -108,4 +108,4 @@ const { data } = useList({
 
 ## References
 
-- `references/storage.md` — full endpoint reference, bucket/object rules, advanced filters, quota semantics
+- `../taruvi-refine-providers/references/storage-provider.md` — full endpoint reference, bucket/object rules, advanced filters, quota semantics

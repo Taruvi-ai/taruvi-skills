@@ -28,7 +28,7 @@ Reference module for all Taruvi datatable and database query work — covering R
 
 ## Step-by-Step Instructions
 
-1. Open and read `references/database.md` for the full query API and rules.
+1. Open and read `../taruvi-refine-providers/references/database-provider.md` for the full query API (CRUD, filters, sorting, pagination, aggregation, graph).
 2. Confirm the current non-deprecated package path for the data operation you are about to use.
    - Do not introduce new code on deprecated providers, hooks, or compatibility helpers.
 2. Identify the query shape needed:
@@ -138,4 +138,4 @@ const { result } = useCustom({
 
 ## References
 
-- `references/database.md` — core operations, query features, aggregation patterns, performance rules
+- `../taruvi-refine-providers/references/database-provider.md` — core operations, query features, aggregation patterns, graph

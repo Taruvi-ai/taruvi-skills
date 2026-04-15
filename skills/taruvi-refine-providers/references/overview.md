@@ -23,9 +23,9 @@ import {
 } from "@taruvi/refine-providers";
 
 const client = new Client({
-  apiKey: "your-api-key",
-  appSlug: "your-app-slug",
-  apiUrl: "https://your-site.taruvi.cloud",
+  apiKey: import.meta.env.VITE_TARUVI_API_KEY,
+  appSlug: import.meta.env.VITE_TARUVI_APP_SLUG,
+  apiUrl: import.meta.env.VITE_TARUVI_API_URL,
 });
 
 function App() {
@@ -47,13 +47,21 @@ function App() {
 }
 ```
 
-## Providers at a Glance
+## Provider Map
 
-| Provider | `dataProviderName` | Purpose | Supported Hooks |
+| Provider | `dataProviderName` | Reference File | Key Operations |
 |---|---|---|---|
-| `dataProvider` | `"default"` | Database CRUD & graph operations | `useList`, `useOne`, `useMany`, `useCreate`, `useUpdate`, `useDelete`, `useCustom` |
-| `storageDataProvider` | `"storage"` | File storage operations | `useList`, `useOne`, `useCreate`, `useUpdate`, `useDelete`, `useDeleteMany`, `useCustom` |
-| `appDataProvider` | `"app"` | App config, edge functions, analytics | `useList`, `useOne`, `useCustom` |
-| `userDataProvider` | `"user"` | User management | `useList`, `useOne`, `useCreate`, `useUpdate`, `useDelete` |
-| `authProvider` | — | Authentication (redirect-based) | `useLogin`, `useLogout`, `useRegister`, `useGetIdentity`, `usePermissions` |
-| `accessControlProvider` | — | Cerbos-based authorization | `useCan` |
+| `dataProvider` | `"default"` | `database-provider.md` | CRUD, filters, sorting, aggregation, graph edges |
+| `storageDataProvider` | `"storage"` | `storage-provider.md` | Upload, download, batch delete, metadata, filters |
+| `appDataProvider` | `"app"` | `app-provider.md` | Roles, settings, secrets, function execution, analytics |
+| `userDataProvider` | `"user"` | `user-provider.md` | User CRUD, roles, apps |
+| `authProvider` | — | `auth-provider.md` | Login/logout/register, token flow, identity, permissions |
+| `accessControlProvider` | — | `access-control-provider.md` | `useCan`, `CanAccess`, prefixed ACL resources, batching |
+
+## Key Rules
+
+- Use `appDataProvider` + `useCustom` for function/analytics execution — not the deprecated `functionsDataProvider`.
+- Graph mode activates automatically when `format`, `include`, `depth`, or `graph_types` is present in `meta`.
+- `storageDataProvider` expects bucket name as the `resource` value.
+- `accessControlProvider` batches `useCan` calls automatically — do not debounce manually.
+- For types (`TaruviMeta`, `StorageUploadVariables`, `FunctionMeta`, etc.) see `types-and-utilities.md`.

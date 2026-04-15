@@ -21,9 +21,11 @@ accessControlProvider(client, {
 
 ## Check Permissions
 
+Use prefixed ACL resource strings — format: `<kind>:<name>` (e.g., `datatable:employees`, `function:employee-terminate`, `query:hrms-dashboard-summary`).
+
 ```tsx
 const { data } = useCan({
-  resource: "posts",
+  resource: "datatable:posts",
   action: "edit",
   params: { id: 1 },
 });
@@ -33,33 +35,23 @@ if (data?.can) {
 }
 ```
 
+Do **not** use `params.entityType` — pass the prefixed resource string directly.
+
 ## CanAccess Component
 
 ```tsx
-<CanAccess resource="posts" action="delete" params={{ id: 1 }}>
+<CanAccess resource="datatable:posts" action="delete" params={{ id: 1 }}>
   <DeleteButton />
 </CanAccess>
 ```
 
-## Entity Type Resolution
+## Resource Prefixes
 
-Cerbos policies use entity types. Resolution priority:
-
-1. `params.entityType` — direct override in `useCan`
-2. `resource.meta.entityType` — from Refine resource config
-3. Resource name — fallback
-
-```tsx
-// Set via resource config
-<Refine resources={[{ name: "posts", meta: { entityType: "blog" } }]} />
-
-// Override per-check
-useCan({
-  resource: "posts",
-  action: "edit",
-  params: { id: 1, entityType: "article" },
-});
-```
+| Prefix | Use for |
+|---|---|
+| `datatable:<name>` | Datatable CRUD operations |
+| `function:<slug>` | Serverless function execution |
+| `query:<slug>` | Analytics query execution |
 
 ## Caching
 
