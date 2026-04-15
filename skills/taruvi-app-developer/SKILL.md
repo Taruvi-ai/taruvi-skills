@@ -103,6 +103,55 @@ If the task includes a dashboard, KPI cards, trends, reporting, or an executive 
 
 For summary-first pages, do not skip this decision. Record it in your implementation notes or plan.
 
+### Step 6 — Default List Views to Backend-Driven Queries
+
+For any backend-backed list or table page, the default implementation must be backend-driven:
+
+- backend pagination is required by default
+- default list `pageSize` is `10`; recommend exposing `10`, `20`, `50`, and `100` as user-selectable options
+- search, filters, and sorting must be server-side by default
+- when the list is rendered with MUI `DataGrid`, default to Refine `useDataGrid`
+- client-side filtering or search is only allowed if the user explicitly asks for it or the list is intentionally local-only
+- do not fetch one page of backend rows and then apply the primary list filtering logic in React
+- if a backend-backed MUI `DataGrid` list is not using `useDataGrid`, document the reason explicitly
+- if the current schema or query path cannot support the needed server-side list behavior, fix the backend/query path before calling the feature done
+
+### Step 7 — Default Network-Backed Dropdowns to Autocomplete
+
+For any dropdown whose options come from network calls:
+
+- use `Autocomplete` (or equivalent typeahead), not a static `Select`
+- query options from the backend with pagination (default option `pageSize` `10`)
+- debounce input before sending search requests
+- send the current search term as server-side filters, not client-side filtering over previously fetched options
+- if the field cannot support server-side search + pagination, treat that as a query/schema gap and fix it before calling the feature done
+
+### Step 8 — Enforce Access-Control Contract
+
+For permission checks in app code:
+
+- use only the published non-deprecated SDK/provider contract with prefixed ACL resource strings
+- `useCan`/`CanAccess` resources must be in prefixed form (for example `datatable:employees`, `function:employee-terminate`, `query:hrms-dashboard-summary`)
+- do not rely on `params.entityType` for access-control checks
+- verify runtime payloads in browser network logs: each `check/resources` `resource.kind` must exactly match the requested `resource` string
+- when SDK/provider ACL contract changes, app code must be updated in the same release cycle and versioned accordingly
+
+### Step 9 — Default Bulk Actions to Backend Bulk Operations
+
+For bulk update/delete/status-change flows:
+
+- execute bulk changes through backend bulk operations by default (`updateMany`, `deleteMany`, or a batch serverless function)
+- define and show selection scope clearly (selected rows vs filtered result set)
+- return and display partial-failure details per record when applicable
+- invalidate/refetch affected list and related summary queries after completion
+
+### Step 10 — Use Refine Notification Provider
+
+For user-facing success/error feedback:
+
+- use the app’s existing Refine notification integration (`notificationProvider`) by default
+- do not introduce custom toast/snackbar systems when Refine notification provider is available
+
 ## Examples
 
 **Greenfield:** User says "build me an employee directory". Read references, wire `dataProvider` and `userDataProvider`, scaffold list/detail pages with Refine hooks. No function needed (single-resource CRUD).
@@ -110,6 +159,8 @@ For summary-first pages, do not skip this decision. Record it in your implementa
 **Existing app refactor:** User says "the cascade delete is broken". Read existing delete handler first, detect multi-resource pattern (tasks + attachments + activities), route to `taruvi-functions/SKILL.md` and rewrite as a serverless function.
 
 **Deploy task:** User says "deploy the frontend". Ask for their deploy target and follow their project's build and deploy workflow.
+
+**List + feedback baseline:** For backend-backed list pages, use `useDataGrid` (`pageSize: 10`) and surface success/error via Refine `notificationProvider` (`useNotification`) rather than custom toasts.
 
 ## Edge Cases
 
@@ -119,6 +170,9 @@ For summary-first pages, do not skip this decision. Record it in your implementa
 - **Existing code uses deprecated providers** — flag `functionsDataProvider`/`analyticsDataProvider` as deprecated; migrate to `appDataProvider + useCustom`. See `taruvi-refine-providers` skill for migration notes.
 - **Dashboard implementation unclear** — if the page is KPI-first or reporting-heavy, default to analytics queries through the `app` provider. Do not fetch full row sets into React just to compute cards and charts.
 - **Package API unclear** — use the installed package’s current non-deprecated API surface. Do not normalize deprecated and current patterns together in new code.
+- **List implementation unclear** — default to backend pagination plus server-side search, filtering, and sorting. Treat client-side filtering on backend-backed lists as an exception that must be explicitly justified.
+- **MUI `DataGrid` list implementation unclear** — default to `useDataGrid` for backend-backed lists unless there is a concrete reason the page cannot use it.
+- **Network-backed dropdown implementation unclear** — default to debounced server-side `Autocomplete` with pagination and search filters. Do not ship client-filtered option lists by default.
 
 ## References
 

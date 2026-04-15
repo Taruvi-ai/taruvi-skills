@@ -39,7 +39,18 @@ Reference module for all Taruvi datatable and database query work — covering R
    - analytics query for KPI/reporting dashboards
    - one datatable aggregate query over multiple filtered queries for simple summaries
    - raw row queries only when the page actually needs rows
-4. Validate the query shape scales — avoid N+1 patterns.
+4. For every backend-backed list UI:
+   - backend pagination is required by default
+   - default list `pageSize` is `10`; recommend supporting `10`, `20`, `50`, and `100` as selectable sizes
+   - search, filters, and sort order must be pushed into the backend query by default
+   - when the list uses MUI `DataGrid`, default to Refine `useDataGrid` so pagination/filter/sort state stays server-driven
+   - do not fetch rows and apply the primary list filtering/search logic in React unless the user explicitly asks for client-side behavior
+5. For every network-backed dropdown/typeahead:
+   - query options from the backend with pagination (default option `pageSize` `10`)
+   - debounce search input
+   - push the search term into backend filters
+   - avoid preloading large option sets and filtering them client-side
+6. Validate the query shape scales — avoid N+1 patterns.
 
 ### Verification checklist
 
@@ -48,10 +59,15 @@ After writing queries, verify:
 - [ ] KPI/reporting dashboards use analytics queries by default
 - [ ] Dashboard/summary views use one `aggregate + groupBy` query, not N separate filtered queries
 - [ ] All list UIs include `pagination` with a reasonable `pageSize`
+- [ ] List views default to `pageSize` `10` and support `10`/`20`/`50`/`100` options unless explicitly scoped otherwise
+- [ ] All backend-backed list filtering, search, and sorting are server-side by default
+- [ ] Backend-backed MUI `DataGrid` lists use `useDataGrid` by default (or include an explicit reason they cannot)
+- [ ] Network-backed dropdown/typeahead options are loaded with debounced server-side search and pagination
 - [ ] Graph queries have an explicit `depth` limit
 - [ ] `having` is only used after a `groupBy`, never as a substitute for `filters`
 - [ ] No N+1 patterns (e.g., looping `useOne` calls inside a list render)
 - [ ] No page fetches full row sets into React just to derive cards, pies, or trend charts
+- [ ] No backend-backed list page applies its primary search/filter logic in React unless the user explicitly requested client-side behavior
 
 ## Examples
 
@@ -61,9 +77,10 @@ const { data } = useList({
   resource: "orders",
   filters: [{ field: "status", operator: "eq", value: "pending" }],
   sorters: [{ field: "created_at", order: "desc" }],
-  pagination: { pageSize: 20 },
+  pagination: { pageSize: 10 },
 });
 ```
+Recommended page-size options for list UIs: `10`, `20`, `50`, `100` (default `10`).
 
 **Dashboard KPI — count by status (one query, not N):**
 ```typescript
@@ -105,6 +122,9 @@ const { result } = useCustom({
 - **Graph data without depth limit** — always set `depth` when using graph/edge queries. Without it, the query traverses unbounded relationships and will time out on any non-trivial dataset.
 - **`having` without `groupBy`** — `having` only works after a `groupBy`. It is not a substitute for a `filters` clause. Using `having` alone silently returns no results.
 - **Large datasets without pagination** — always add `pagination` for list UIs. Unbounded queries will time out on tables with >1000 rows.
+- **Client-side list filtering on backend data** — if a list fetches backend rows and then applies its main search or filter logic in React, that is a correctness and scalability smell. Move that logic into backend filters/sorters unless the user explicitly asked for local filtering.
+- **Manual MUI grid state wiring** — if a backend-backed MUI `DataGrid` list hand-wires pagination/filter/sort state with `useList`, prefer `useDataGrid` unless there is a concrete limitation that requires manual wiring.
+- **Client-filtered remote dropdown options** — if a dropdown fetches remote options once and filters locally, it will miss matches and fail to scale. Use debounced server-side search with paginated option loading.
 - **`aggregate` expects an array** — `aggregate: "count"` will fail silently. Use `aggregate: ["count"]`.
 - **Filter operator typos** — the operator is `"eq"`, not `"equals"` or `"="`. Common operators: `eq`, `ne`, `lt`, `gt`, `lte`, `gte`, `contains`, `in`.
 

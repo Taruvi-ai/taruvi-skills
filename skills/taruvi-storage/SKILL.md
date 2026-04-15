@@ -37,6 +37,11 @@ Reference module for Taruvi storage workflows — bucket management, object uplo
    - **List with filters** → GET with query params (`prefix`, `mimetype`, `size__gte`, etc.)
 3. Set bucket `visibility` at the bucket level; override per-object only when needed.
 4. For quota-aware UX, call the usage endpoint and display a warning — do not rely on upload blocking.
+5. For document/attachment flows, default to multi-file upload UX:
+   - allow selecting/uploading multiple files per action by default
+   - process each file independently and capture per-file success/failure
+   - keep storage object and metadata record creation/deletion consistent (cleanup storage on metadata failure where possible)
+   - after upload/delete, invalidate/refetch file lists so UI reflects current backend state
 
 ### Verification checklist
 
@@ -48,6 +53,8 @@ After writing storage code, verify:
 - [ ] Batch deletes are split into chunks of ≤100 paths
 - [ ] Upload UI warns users when overwriting an existing path (upsert behavior)
 - [ ] Quota usage is surfaced as a warning, not as an upload blocker
+- [ ] Multi-file uploads report per-file status instead of a single aggregate success
+- [ ] Metadata and storage-object state remain consistent when one step fails
 
 ## Examples
 
@@ -96,6 +103,8 @@ const { data } = useList({
 - **`allowed_mime_types` rejects silently** — if a bucket has `allowed_mime_types: ["image/*"]` and you upload a PDF, the API rejects it with a generic 400. The error message does not mention MIME types. Check bucket config first when uploads fail.
 - **Missing `app_category`** — bucket creation requires `app_category` (`assets` or `attachments`). Omitting it returns a validation error, not a helpful message.
 - **`dataProviderName: "storage"` is required** — forgetting `dataProviderName` on `useCreate`/`useList`/`useDeleteMany` routes the call to the default (database) provider, which returns confusing "resource not found" errors.
+- **Single-file-only UX for document workflows** — attachment flows should support multi-file selection by default; forcing one-file-at-a-time creates unnecessary user friction.
+- **All-or-nothing status for batch uploads** — if one file fails, do not hide successful uploads; show per-file outcomes and surface exact failures.
 
 ## References
 
