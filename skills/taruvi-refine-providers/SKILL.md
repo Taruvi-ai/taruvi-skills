@@ -16,6 +16,8 @@ metadata:
 
 Reference module for wiring and using Taruvi's Refine data providers in the frontend — covering client setup, all provider types, hook usage, auth flow, and access control batching.
 
+**Compliance rule:** This skill and its references are the source of truth for all provider usage. Do not substitute with simpler patterns, copy outdated project code, or skip prescribed steps. If a requirement cannot be met, stop and ask the user.
+
 ## Provider Map
 
 Use this as the canonical provider inventory for Taruvi + Refine apps:

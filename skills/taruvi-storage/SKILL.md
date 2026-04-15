@@ -15,6 +15,8 @@ metadata:
 
 Reference module for Taruvi storage workflows — bucket management, object upload/download via REST path-based API or Refine provider hooks, visibility control, batch operations, and quota-aware UX patterns.
 
+**Compliance rule:** This skill's prescribed patterns (multi-file upload by default, per-file status reporting, storage+metadata consistency) are mandatory. Do not fall back to simpler patterns. If a requirement cannot be met, stop and ask the user.
+
 ## When to Use This Skill
 
 - Creating or configuring a storage bucket (`app_category`, `visibility`, `allowed_mime_types`)

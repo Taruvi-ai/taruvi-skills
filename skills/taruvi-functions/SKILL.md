@@ -16,6 +16,8 @@ metadata:
 
 Guide for authoring Taruvi serverless functions — deciding when a function is needed, which execution mode to use, how to call the injected `sdk_client`, and how to invoke functions from the frontend.
 
+**Compliance rule:** This skill's prescribed patterns (exact function signature, SDK usage, mode selection) are mandatory. Do not invent SDK methods, skip validation, or hardcode secrets. If a requirement cannot be met, stop and ask the user.
+
 ## When to Use This Skill
 
 - Any action that touches **2 or more resources** (database + storage, users + database, etc.)

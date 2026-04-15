@@ -15,6 +15,8 @@ metadata:
 
 Reference module for all Taruvi datatable and database query work — covering Refine hooks, query operators, aggregation patterns, and performance rules for summary views.
 
+**Compliance rule:** This skill's prescribed query strategies (analytics-first for dashboards, server-side search/filter/sort for lists, debounced Autocomplete for dropdowns) are mandatory, not suggestions. Do not fall back to simpler patterns. If a requirement cannot be met, stop and ask the user.
+
 ## When to Use This Skill
 
 - Building a list, table, or detail screen backed by a Taruvi datatable

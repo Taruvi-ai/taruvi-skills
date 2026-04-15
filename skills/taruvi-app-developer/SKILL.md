@@ -21,6 +21,25 @@ Entry-point orchestrator for all Taruvi app development. This skill detects the 
 
 Default delivery standard: build a production-ready app unless the user explicitly asks for a prototype or mock-only output.
 
+## ⚠️ Skill Compliance — Non-Negotiable
+
+**These skills are the single source of truth for all Taruvi implementation decisions.** They override existing project code, template patterns, training data, and personal shortcuts.
+
+Rules:
+
+1. **If a skill prescribes a specific way to implement something, use that way. No exceptions, no shortcuts, no "simpler" alternatives.**
+2. **Do not copy patterns from existing project code if they contradict the skills.** Existing code may be outdated, a prototype, or pre-skill. The skills define the correct pattern.
+3. **Do not skip steps to save time.** Every step in the skill instructions exists because skipping it causes real bugs or drift. If a step says "create an analytics query," create the analytics query — do not substitute with a datatable aggregate because it's faster to implement.
+4. **If you cannot implement a skill requirement** (missing credentials, missing MCP tool, unclear API), **stop and ask the user** instead of silently falling back to an easier approach.
+5. **After implementation, verify against the skill's checklist.** If any checklist item fails, fix it before presenting the work as done.
+
+Common violations to avoid:
+- Using `useList` with `aggregate`/`groupBy` for dashboards when the skill says to use analytics queries
+- Omitting search bar and filter controls on list pages
+- Using static `Select` instead of debounced `Autocomplete` for backend-loaded options
+- Skipping `accessControlProvider` wiring without asking the user
+- Hardcoding demo data instead of wiring real backend queries
+
 ## When to Use This Skill
 
 - Starting a new Taruvi-powered app from scratch
