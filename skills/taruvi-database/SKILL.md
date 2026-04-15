@@ -15,7 +15,7 @@ metadata:
 
 Reference module for all Taruvi datatable and database query work — covering Refine hooks, query operators, aggregation patterns, and performance rules for summary views.
 
-**Compliance rule:** This skill's prescribed query strategies (analytics-first for dashboards, server-side search/filter/sort for lists, debounced Autocomplete for dropdowns) are mandatory, not suggestions. Do not fall back to simpler patterns. If a requirement cannot be met, stop and ask the user.
+**Compliance rule:** This skill's prescribed query strategies (server-side search/filter/sort for lists, debounced Autocomplete for dropdowns) are mandatory, not suggestions. Do not fall back to simpler patterns. If a requirement cannot be met, stop and ask the user.
 
 ## When to Use This Skill
 
@@ -35,12 +35,14 @@ Reference module for all Taruvi datatable and database query work — covering R
    - Do not introduce new code on deprecated providers, hooks, or compatibility helpers.
 2. Identify the query shape needed:
    - **List/table UI** → plain filtered row query with pagination
-   - **Dashboard card / KPI** → use saved analytics query by default; use datatable `groupBy` + aggregate only with an explicit documented exception
+   - **Dashboard card / KPI (single table)** → datatable `groupBy` + `aggregate`
+   - **Dashboard element needing data from 2+ tables** → saved analytics query via `appDataProvider` + `useCustom`
    - **Related data** → graph options with `include`/`depth` meta keys
 3. Apply the preference order:
-   - analytics query for KPI/reporting dashboards (required by default)
-   - one datatable aggregate query over multiple filtered queries only for documented lightweight operational exceptions
+   - single-table aggregates via datatable provider for most dashboard metrics
+   - saved analytics queries when a dashboard element needs data from 2+ tables
    - raw row queries only when the page actually needs rows
+   - never fetch full row sets into React to derive summary metrics
 4. For every backend-backed list UI:
    - backend pagination is required by default
    - default list `pageSize` is `10`; recommend supporting `10`, `20`, `50`, and `100` as selectable sizes
@@ -59,7 +61,7 @@ Reference module for all Taruvi datatable and database query work — covering R
 
 After writing queries, verify:
 
-- [ ] KPI/reporting dashboards use analytics queries by default (or have an explicit documented exception with rationale)
+- [ ] Single-table dashboard metrics use datatable `aggregate` + `groupBy`; dashboard elements needing data from 2+ tables use saved analytics queries
 - [ ] Dashboard/summary views use one `aggregate + groupBy` query, not N separate filtered queries
 - [ ] All list UIs include `pagination` with a reasonable `pageSize`
 - [ ] List views default to `pageSize` `10` and support `10`/`20`/`50`/`100` options unless explicitly scoped otherwise
@@ -91,7 +93,7 @@ Recommended page-size options for list UIs: `10`, `20`, `50`, `100` (default `10
 - Bind search/filter state to backend query params.
 - Keep list state URL-syncable when possible.
 
-**Operational dashboard exception (document why analytics is not used):**
+**Single-table dashboard (datatable aggregate):**
 ```typescript
 const { data } = useList({
   resource: "orders",
@@ -112,7 +114,7 @@ meta: {
 }
 ```
 
-**Executive dashboard KPI — saved analytics query (default and preferred):**
+**Multi-table dashboard element — saved analytics query (required when element needs data from 2+ tables):**
 ```typescript
 const { result } = useCustom({
   url: "hrms-dashboard-summary",
@@ -125,8 +127,8 @@ const { result } = useCustom({
 
 ## Gotchas
 
-- **N separate queries for a dashboard** — if you see separate `useList` calls per status/category to build a summary, that is a performance bug. Prefer analytics first; if exception applies, replace with one `groupBy` query.
-- **Full row fetch for KPI pages** — if a dashboard pulls complete table rows into React and then computes totals/charts client-side, that is a design smell. Prefer analytics by default.
+- **N separate queries for a dashboard** — if you see separate `useList` calls per status/category to build a summary, that is a performance bug. Replace with one `groupBy` query for single-table data, or a saved analytics query if the element needs data from 2+ tables.
+- **Full row fetch for KPI pages** — if a dashboard pulls complete table rows into React and then computes totals/charts client-side, that is a bug. Always push aggregation to the server.
 - **Deprecated query path** — if a dashboard only works through a deprecated package path, do not ship that as the final implementation. Resolve the canonical package API first.
 - **Graph data without depth limit** — always set `depth` when using graph/edge queries. Without it, the query traverses unbounded relationships and will time out on any non-trivial dataset.
 - **`having` without `groupBy`** — `having` only works after a `groupBy`. It is not a substitute for a `filters` clause. Using `having` alone silently returns no results.

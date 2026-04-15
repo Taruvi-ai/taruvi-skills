@@ -16,9 +16,6 @@
 
 ## Query Strategy for Dashboards
 
-Use analytics queries as the default strategy for KPI/reporting dashboards.
-
-- KPI/reporting/executive dashboards should use saved analytics queries via the `app` provider.
-- Datatable grouped aggregate (`aggregate` + `groupBy`) is an exception path for lightweight operational summaries and must be explicitly justified.
-- Add `having` only when post-aggregation filtering is required.
-- Use multiple filtered row queries only when UI actually needs separate row sets.
+- Single-table metrics: use datatable provider with `aggregate`/`groupBy`.
+- Dashboard elements needing data from 2+ tables: use saved analytics queries via the `app` provider.
+- Never fetch full row sets into React to derive summary metrics.

@@ -29,12 +29,12 @@ Rules:
 
 1. **If a skill prescribes a specific way to implement something, use that way. No exceptions, no shortcuts, no "simpler" alternatives.**
 2. **Do not copy patterns from existing project code if they contradict the skills.** Existing code may be outdated, a prototype, or pre-skill. The skills define the correct pattern.
-3. **Do not skip steps to save time.** Every step in the skill instructions exists because skipping it causes real bugs or drift. If a step says "create an analytics query," create the analytics query — do not substitute with a datatable aggregate because it's faster to implement.
+3. **Do not skip steps to save time.** Every step in the skill instructions exists because skipping it causes real bugs or drift.
 4. **If you cannot implement a skill requirement** (missing credentials, missing MCP tool, unclear API), **stop and ask the user** instead of silently falling back to an easier approach.
 5. **After implementation, verify against the skill's checklist.** If any checklist item fails, fix it before presenting the work as done.
 
 Common violations to avoid:
-- Using `useList` with `aggregate`/`groupBy` for dashboards when the skill says to use analytics queries
+- Using `useList` with `aggregate`/`groupBy` for dashboard elements that need data from 2+ tables (use analytics queries instead)
 - Omitting search bar and filter controls on list pages
 - Using static `Select` instead of debounced `Autocomplete` for backend-loaded options
 - Skipping `accessControlProvider` wiring without asking the user
@@ -113,31 +113,31 @@ For everything else — use provider hooks directly, no function needed.
 
 ### Step 4 — Route to the Right Module
 
-Only load modules relevant to the task. Use your file reading tool to open and read each relevant `SKILL.md` before writing any code.
+**You MUST open and read the `SKILL.md` for every relevant module before writing any code.** Do not proceed to implementation until all applicable skills are loaded. Use your file search tool to locate each one.
 
-| Task | Skill to load |
+| If the task involves… | You MUST load |
 |---|---|
-| Writing, editing, or debugging a serverless function | `taruvi-functions` |
-| Building or refactoring frontend provider/hook code | `taruvi-refine-providers` |
-| Building or optimizing data queries, dashboards, aggregations | `taruvi-database` |
-| Adding or changing file upload/download/storage features | `taruvi-storage` |
-| Task touches 2+ of the above | Load all relevant skills |
+| Any frontend page, hook, or provider code | `taruvi-refine-providers` |
+| List pages, detail views, filtered tables | `taruvi-database` |
+| Dashboards, KPI cards, charts, summaries | `taruvi-database` |
+| File upload, download, storage, attachments | `taruvi-storage` |
+| Multi-resource operations, backend logic, events, cron | `taruvi-functions` |
 
-Find and read the `SKILL.md` for the required skill. Do not hardcode a path — use your file search tool to locate it.
+**Most app-building tasks require 2+ skills.** For example:
+- "Build an employee list page" → `taruvi-refine-providers` + `taruvi-database`
+- "Add file upload to onboarding" → `taruvi-refine-providers` + `taruvi-storage` + `taruvi-functions` (multi-resource)
+- "Build a dashboard" → `taruvi-refine-providers` + `taruvi-database`
+- "Build a full CRUD feature" → `taruvi-refine-providers` + `taruvi-database` (+ `taruvi-storage` if files, + `taruvi-functions` if multi-resource)
 
-### Step 5 — Enforce Dashboard Analytics Strategy
+Find and read the `SKILL.md` for each required skill. Do not hardcode a path — use your file search tool to locate it.
 
-If the task includes a dashboard, KPI cards, trends, reporting, or an executive summary:
+### Step 5 — Choose Dashboard Query Strategy
 
-- **Analytics-backed dashboard is required by default** for KPI-first, executive, reporting, and trend pages.
-- **Do not implement KPI/reporting dashboards with datatable `groupBy`/`aggregate` first.**
-- `groupBy`/`aggregate` is allowed only when all of these are true:
-  1. the dashboard is lightweight and operational (not executive/reporting),
-  2. a saved analytics query path is not available or would be disproportionate overhead,
-  3. you explicitly document this exception in implementation notes.
-- **Row query + derive in React** is only allowed when the page is row-first and summary metrics are incidental.
+If the task includes a dashboard, KPI cards, charts, or summary metrics:
 
-For summary-first pages, do not skip this decision. Record the chosen strategy and explicit reason.
+- **Single-table aggregates** → use datatable provider with `useList` + `meta.aggregate`/`groupBy`. This is the default for most dashboards.
+- **Multi-table visualizations** → use saved analytics queries via `appDataProvider` + `useCustom` with `meta.kind: "analytics"`. This is required when a dashboard element (card, chart, metric, or any visual) needs to combine data from 2+ tables to render.
+- **Row query + derive in React** is never allowed for summary metrics. Always push aggregation to the server.
 
 ### Step 6 — Default List Views to Backend-Driven Queries
 
@@ -187,7 +187,7 @@ For bulk update/delete/status-change flows:
 
 For user-facing success/error feedback:
 
-- use the app’s existing Refine notification integration (`notificationProvider`) by default
+- use the app's existing Refine notification integration (`notificationProvider`) by default
 - do not introduce custom toast/snackbar systems when Refine notification provider is available
 
 ## Examples
@@ -201,18 +201,16 @@ For user-facing success/error feedback:
 **List + feedback baseline:** For backend-backed list pages, use `useDataGrid` (`pageSize: 10`) and surface success/error via Refine `notificationProvider` (`useNotification`) rather than custom toasts.
 Include visible search and filter controls unless the user explicitly asks for a minimal list.
 
-## Edge Cases
+## Rules (always apply)
 
-- **Unclear mode** — when signals are mixed, ask the user: "Is this a new app or does it already have Taruvi providers set up?"
-- **Task spans multiple modules** — load all relevant SKILL.md files before starting; don't guess from memory.
-- **Function vs provider unclear** — default to a function whenever there is any cross-resource side effect, even if it seems minor.
-- **Existing code uses deprecated providers** — flag `functionsDataProvider`/`analyticsDataProvider` as deprecated; migrate to `appDataProvider + useCustom`. See `taruvi-refine-providers` skill for migration notes.
-- **Dashboard implementation unclear** — if the page is KPI-first or reporting-heavy, analytics through the `app` provider is mandatory by default. Do not fetch full row sets into React just to compute cards and charts.
-- **Package API unclear** — use the installed package’s current non-deprecated API surface. Do not normalize deprecated and current patterns together in new code.
-- **List implementation unclear** — default to backend pagination plus server-side search, filtering, and sorting. Treat client-side filtering on backend-backed lists as an exception that must be explicitly justified.
-- **List UX scope unclear** — default to including visible search + filter controls on backend-backed lists. Only omit when explicitly requested.
-- **MUI `DataGrid` list implementation unclear** — default to `useDataGrid` for backend-backed lists unless there is a concrete reason the page cannot use it.
-- **Network-backed dropdown implementation unclear** — default to debounced server-side `Autocomplete` with pagination and search filters. Do not ship client-filtered option lists by default.
+- **Dashboards** — single-table metrics use datatable `aggregate`/`groupBy`. When a dashboard element needs data from 2+ tables, use saved analytics queries. Never fetch full row sets into React to derive summary metrics.
+- **Functions** — use a serverless function whenever there is any cross-resource side effect, even if it seems minor.
+- **Lists** — backend pagination, server-side search/filter/sort, visible search + filter controls, `useDataGrid` for MUI DataGrid. No exceptions unless the user explicitly asks.
+- **Dropdowns** — debounced server-side `Autocomplete` with pagination. No static `Select` with one-shot loads.
+- **Deprecated providers** — flag `functionsDataProvider`/`analyticsDataProvider` as deprecated; migrate to `appDataProvider + useCustom`.
+- **Package API** — use the installed package's current non-deprecated API surface. Do not copy deprecated patterns from existing code.
+- **Multi-module tasks** — load all relevant SKILL.md files before starting; don't guess from memory.
+- **Unclear project mode** — ask the user: "Is this a new app or does it already have Taruvi providers set up?"
 
 ## References
 

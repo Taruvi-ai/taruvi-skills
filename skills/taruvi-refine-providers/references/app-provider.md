@@ -94,7 +94,7 @@ const { data } = useCustom({
 });
 ```
 
-For KPI/reporting dashboards, prefer analytics queries over fetching raw datatable rows and deriving aggregates in React.
+For dashboard elements that need data from 2+ tables, use analytics queries instead of multiple datatable calls.
 
 **Dashboard example:**
 ```tsx
