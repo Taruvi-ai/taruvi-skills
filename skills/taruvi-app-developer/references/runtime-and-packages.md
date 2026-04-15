@@ -16,8 +16,9 @@
 
 ## Query Strategy for Dashboards
 
-Prefer one aggregated server-side query over multiple filtered queries when rendering summary metrics.
+Use analytics queries as the default strategy for KPI/reporting dashboards.
 
-- Use grouped aggregate (`aggregate` + `groupBy`) for KPI cards/charts.
+- KPI/reporting/executive dashboards should use saved analytics queries via the `app` provider.
+- Datatable grouped aggregate (`aggregate` + `groupBy`) is an exception path for lightweight operational summaries and must be explicitly justified.
 - Add `having` only when post-aggregation filtering is required.
 - Use multiple filtered row queries only when UI actually needs separate row sets.

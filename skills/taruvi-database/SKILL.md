@@ -33,16 +33,17 @@ Reference module for all Taruvi datatable and database query work — covering R
    - Do not introduce new code on deprecated providers, hooks, or compatibility helpers.
 2. Identify the query shape needed:
    - **List/table UI** → plain filtered row query with pagination
-   - **Dashboard card / KPI** → prefer saved analytics query; use datatable `groupBy` + aggregate only for lightweight operational summaries
+   - **Dashboard card / KPI** → use saved analytics query by default; use datatable `groupBy` + aggregate only with an explicit documented exception
    - **Related data** → graph options with `include`/`depth` meta keys
 3. Apply the preference order:
-   - analytics query for KPI/reporting dashboards
-   - one datatable aggregate query over multiple filtered queries for simple summaries
+   - analytics query for KPI/reporting dashboards (required by default)
+   - one datatable aggregate query over multiple filtered queries only for documented lightweight operational exceptions
    - raw row queries only when the page actually needs rows
 4. For every backend-backed list UI:
    - backend pagination is required by default
    - default list `pageSize` is `10`; recommend supporting `10`, `20`, `50`, and `100` as selectable sizes
    - search, filters, and sort order must be pushed into the backend query by default
+   - list pages should expose visible search input and relevant filter controls by default
    - when the list uses MUI `DataGrid`, default to Refine `useDataGrid` so pagination/filter/sort state stays server-driven
    - do not fetch rows and apply the primary list filtering/search logic in React unless the user explicitly asks for client-side behavior
 5. For every network-backed dropdown/typeahead:
@@ -56,11 +57,12 @@ Reference module for all Taruvi datatable and database query work — covering R
 
 After writing queries, verify:
 
-- [ ] KPI/reporting dashboards use analytics queries by default
+- [ ] KPI/reporting dashboards use analytics queries by default (or have an explicit documented exception with rationale)
 - [ ] Dashboard/summary views use one `aggregate + groupBy` query, not N separate filtered queries
 - [ ] All list UIs include `pagination` with a reasonable `pageSize`
 - [ ] List views default to `pageSize` `10` and support `10`/`20`/`50`/`100` options unless explicitly scoped otherwise
 - [ ] All backend-backed list filtering, search, and sorting are server-side by default
+- [ ] Backend-backed list pages include visible search and relevant filter controls by default (or explicit user-requested omission)
 - [ ] Backend-backed MUI `DataGrid` lists use `useDataGrid` by default (or include an explicit reason they cannot)
 - [ ] Network-backed dropdown/typeahead options are loaded with debounced server-side search and pagination
 - [ ] Graph queries have an explicit `depth` limit
@@ -82,7 +84,12 @@ const { data } = useList({
 ```
 Recommended page-size options for list UIs: `10`, `20`, `50`, `100` (default `10`).
 
-**Dashboard KPI — count by status (one query, not N):**
+**List UX baseline (production-ready):**
+- Include a visible search input and common filters (for example status/department/date).
+- Bind search/filter state to backend query params.
+- Keep list state URL-syncable when possible.
+
+**Operational dashboard exception (document why analytics is not used):**
 ```typescript
 const { data } = useList({
   resource: "orders",
@@ -103,7 +110,7 @@ meta: {
 }
 ```
 
-**Executive dashboard KPI — saved analytics query (preferred):**
+**Executive dashboard KPI — saved analytics query (default and preferred):**
 ```typescript
 const { result } = useCustom({
   url: "hrms-dashboard-summary",
@@ -116,13 +123,14 @@ const { result } = useCustom({
 
 ## Gotchas
 
-- **N separate queries for a dashboard** — if you see separate `useList` calls per status/category to build a summary, that is a performance bug. Replace with one `groupBy` query. This is the single most common mistake.
-- **Full row fetch for KPI pages** — if a dashboard pulls complete table rows into React and then computes totals/charts client-side, that is a design smell. Prefer analytics or a single aggregate query.
+- **N separate queries for a dashboard** — if you see separate `useList` calls per status/category to build a summary, that is a performance bug. Prefer analytics first; if exception applies, replace with one `groupBy` query.
+- **Full row fetch for KPI pages** — if a dashboard pulls complete table rows into React and then computes totals/charts client-side, that is a design smell. Prefer analytics by default.
 - **Deprecated query path** — if a dashboard only works through a deprecated package path, do not ship that as the final implementation. Resolve the canonical package API first.
 - **Graph data without depth limit** — always set `depth` when using graph/edge queries. Without it, the query traverses unbounded relationships and will time out on any non-trivial dataset.
 - **`having` without `groupBy`** — `having` only works after a `groupBy`. It is not a substitute for a `filters` clause. Using `having` alone silently returns no results.
 - **Large datasets without pagination** — always add `pagination` for list UIs. Unbounded queries will time out on tables with >1000 rows.
 - **Client-side list filtering on backend data** — if a list fetches backend rows and then applies its main search or filter logic in React, that is a correctness and scalability smell. Move that logic into backend filters/sorters unless the user explicitly asked for local filtering.
+- **No list controls** — backend-backed lists without visible search/filter controls are usually not production-ready unless the user explicitly requested a minimal table.
 - **Manual MUI grid state wiring** — if a backend-backed MUI `DataGrid` list hand-wires pagination/filter/sort state with `useList`, prefer `useDataGrid` unless there is a concrete limitation that requires manual wiring.
 - **Client-filtered remote dropdown options** — if a dropdown fetches remote options once and filters locally, it will miss matches and fail to scale. Use debounced server-side search with paginated option loading.
 - **`aggregate` expects an array** — `aggregate: "count"` will fail silently. Use `aggregate: ["count"]`.

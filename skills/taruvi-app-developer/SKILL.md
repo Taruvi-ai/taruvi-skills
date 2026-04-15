@@ -19,6 +19,8 @@ metadata:
 
 Entry-point orchestrator for all Taruvi app development. This skill detects the project context, decides whether a serverless function is needed, and routes to the right module skill before any code is written.
 
+Default delivery standard: build a production-ready app unless the user explicitly asks for a prototype or mock-only output.
+
 ## When to Use This Skill
 
 - Starting a new Taruvi-powered app from scratch
@@ -55,6 +57,17 @@ Before writing code against Taruvi packages, identify the current non-deprecated
 - If old examples, README snippets, or existing code use deprecated providers or hooks, do not copy them into new work.
 - If the canonical path is unclear, resolve that before building the feature.
 - If the only apparent working path is deprecated, treat that as a provider/docs issue to fix before finalizing the app code.
+
+### Step 2.6 — Set Production-Ready Acceptance Baseline
+
+Unless explicitly scoped down by the user, treat app tasks as production-ready deliverables:
+
+- no hardcoded demo-only arrays for core workflows
+- real backend wiring for CRUD/list/detail flows
+- backend-driven pagination/sort/filter for list pages
+- list-page UX includes visible search and relevant filter controls
+- error and success paths are surfaced through the app notification provider
+- required empty/loading/error states are present for key screens
 
 ### Step 3 — Decide: Function or Provider?
 
@@ -93,15 +106,19 @@ Only load modules relevant to the task. Use your file reading tool to open and r
 
 Find and read the `SKILL.md` for the required skill. Do not hardcode a path — use your file search tool to locate it.
 
-### Step 5 — Decide Dashboard Query Strategy Explicitly
+### Step 5 — Enforce Dashboard Analytics Strategy
 
-If the task includes a dashboard, KPI cards, trends, reporting, or an executive summary, make an explicit choice before coding:
+If the task includes a dashboard, KPI cards, trends, reporting, or an executive summary:
 
-- **Analytics-backed dashboard** → default for KPI-first, executive, reporting, and trend pages
-- **Datatable aggregate/groupBy** → acceptable for lightweight operational summaries when a saved analytics query would be unnecessary
-- **Row query + derive in React** → only acceptable when the UI primarily renders rows and the summary is incidental
+- **Analytics-backed dashboard is required by default** for KPI-first, executive, reporting, and trend pages.
+- **Do not implement KPI/reporting dashboards with datatable `groupBy`/`aggregate` first.**
+- `groupBy`/`aggregate` is allowed only when all of these are true:
+  1. the dashboard is lightweight and operational (not executive/reporting),
+  2. a saved analytics query path is not available or would be disproportionate overhead,
+  3. you explicitly document this exception in implementation notes.
+- **Row query + derive in React** is only allowed when the page is row-first and summary metrics are incidental.
 
-For summary-first pages, do not skip this decision. Record it in your implementation notes or plan.
+For summary-first pages, do not skip this decision. Record the chosen strategy and explicit reason.
 
 ### Step 6 — Default List Views to Backend-Driven Queries
 
@@ -110,11 +127,13 @@ For any backend-backed list or table page, the default implementation must be ba
 - backend pagination is required by default
 - default list `pageSize` is `10`; recommend exposing `10`, `20`, `50`, and `100` as user-selectable options
 - search, filters, and sorting must be server-side by default
+- provide visible list controls for search and common filters by default (for example: status, department, date range, active/inactive)
 - when the list is rendered with MUI `DataGrid`, default to Refine `useDataGrid`
 - client-side filtering or search is only allowed if the user explicitly asks for it or the list is intentionally local-only
 - do not fetch one page of backend rows and then apply the primary list filtering logic in React
 - if a backend-backed MUI `DataGrid` list is not using `useDataGrid`, document the reason explicitly
 - if the current schema or query path cannot support the needed server-side list behavior, fix the backend/query path before calling the feature done
+- if search/filter controls are omitted, document the explicit user instruction or concrete reason
 
 ### Step 7 — Default Network-Backed Dropdowns to Autocomplete
 
@@ -161,6 +180,7 @@ For user-facing success/error feedback:
 **Deploy task:** User says "deploy the frontend". Ask for their deploy target and follow their project's build and deploy workflow.
 
 **List + feedback baseline:** For backend-backed list pages, use `useDataGrid` (`pageSize: 10`) and surface success/error via Refine `notificationProvider` (`useNotification`) rather than custom toasts.
+Include visible search and filter controls unless the user explicitly asks for a minimal list.
 
 ## Edge Cases
 
@@ -168,9 +188,10 @@ For user-facing success/error feedback:
 - **Task spans multiple modules** — load all relevant SKILL.md files before starting; don't guess from memory.
 - **Function vs provider unclear** — default to a function whenever there is any cross-resource side effect, even if it seems minor.
 - **Existing code uses deprecated providers** — flag `functionsDataProvider`/`analyticsDataProvider` as deprecated; migrate to `appDataProvider + useCustom`. See `taruvi-refine-providers` skill for migration notes.
-- **Dashboard implementation unclear** — if the page is KPI-first or reporting-heavy, default to analytics queries through the `app` provider. Do not fetch full row sets into React just to compute cards and charts.
+- **Dashboard implementation unclear** — if the page is KPI-first or reporting-heavy, analytics through the `app` provider is mandatory by default. Do not fetch full row sets into React just to compute cards and charts.
 - **Package API unclear** — use the installed package’s current non-deprecated API surface. Do not normalize deprecated and current patterns together in new code.
 - **List implementation unclear** — default to backend pagination plus server-side search, filtering, and sorting. Treat client-side filtering on backend-backed lists as an exception that must be explicitly justified.
+- **List UX scope unclear** — default to including visible search + filter controls on backend-backed lists. Only omit when explicitly requested.
 - **MUI `DataGrid` list implementation unclear** — default to `useDataGrid` for backend-backed lists unless there is a concrete reason the page cannot use it.
 - **Network-backed dropdown implementation unclear** — default to debounced server-side `Autocomplete` with pagination and search filters. Do not ship client-filtered option lists by default.
 
