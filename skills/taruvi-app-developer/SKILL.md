@@ -19,7 +19,7 @@ metadata:
 
 Entry-point orchestrator for all Taruvi app development. This skill detects the project context, decides whether a serverless function is needed, and routes to the right module skill before any code is written.
 
-Default delivery standard: build a production-ready app unless the user explicitly asks for a prototype or mock-only output.
+Default delivery standard: **always build a production-ready, production-scale app.** Not a demo, not an MVP, not a prototype. Every feature must be wired to real backend data, use proper error handling, and be built to handle real-world usage. The user must explicitly ask for a reduced scope if they want anything less.
 
 ## ⚠️ Skill Compliance — Non-Negotiable
 
@@ -85,6 +85,7 @@ Unless explicitly scoped down by the user, treat app tasks as production-ready d
 - real backend wiring for CRUD/list/detail flows
 - backend-driven pagination/sort/filter for list pages
 - list-page UX includes visible search and relevant filter controls
+- dashboards show live data from real backend queries, automatically calculated from the system's data and kept up to date — never hardcoded or demo values
 - error and success paths are surfaced through the app notification provider
 - required empty/loading/error states are present for key screens
 
@@ -138,6 +139,8 @@ If the task includes a dashboard, KPI cards, charts, or summary metrics:
 - **Single-table aggregates** → use datatable provider with `useList` + `meta.aggregate`/`groupBy`. This is the default for most dashboards.
 - **Multi-table visualizations** → use saved analytics queries via `appDataProvider` + `useCustom` with `meta.kind: "analytics"`. This is required when a dashboard element (card, chart, metric, or any visual) needs to combine data from 2+ tables to render.
 - **Row query + derive in React** is never allowed for summary metrics. Always push aggregation to the server.
+
+**Before writing any dashboard query, check:** does this metric/chart need data from more than one table? For example, "revenue by department" needs orders + departments — that's 2 tables, so use analytics. "Orders by status" only needs the orders table — use datatable aggregate.
 
 ### Step 6 — Default List Views to Backend-Driven Queries
 
