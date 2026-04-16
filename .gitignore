@@ -1,2 +1,6 @@
 node_modules/
 *.tgz
+/.idea/modules.xml
+/.idea/taruvi-skills.iml
+/.idea/vcs.xml
+/.idea/.gitignore

@@ -1,19 +1,33 @@
-# User Data Provider
+---
+name: taruvi-users
+description: >
+  Use this skill when the user is building user management features — user
+  lists, user detail pages, user creation/editing, role assignment, or
+  user-related data queries. Also use when the user mentions user profiles,
+  user CRUD, or the userDataProvider.
+metadata:
+  author: taruvi-ai
+  version: "1.0.0"
+---
 
-User management: list, get, create, update, delete users via the `"user"` provider.
+## Overview
 
-## Setup
+Reference module for Taruvi user management — user CRUD, role assignment, user apps, and the `userDataProvider`.
 
-```tsx
-<Refine
-  dataProvider={{
-    default: dataProvider(client),
-    user: userDataProvider(client),
-  }}
-/>
-```
+**Compliance rule:** This skill's prescribed patterns (userDataProvider for user CRUD, server-side search/filter for user lists) are mandatory. Do not call user REST endpoints directly from components. If a requirement cannot be met, stop and ask the user.
 
-## List Users
+## When to Use This Skill
+
+- Building user list, detail, create, or edit pages
+- Assigning or revoking roles
+- Fetching user apps or preferences
+- Using `userDataProvider` with `useList`, `useOne`, `useCreate`, `useUpdate`, `useDelete`
+
+**Do not use this skill for:** login/logout/session (use `taruvi-auth`), permission checks (use `taruvi-access-control`).
+
+## API Reference
+
+### List Users
 
 ```tsx
 const { result } = useList({
@@ -26,7 +40,6 @@ const { result } = useList({
   ],
   sorters: [{ field: "username", order: "asc" }],
 });
-// result.data → User[], result.total → number
 ```
 
 **Supported filters:**
@@ -39,18 +52,15 @@ const { result } = useList({
 | `is_superuser` | `boolean` | Filter by superuser status |
 | `is_deleted` | `boolean` | Filter by deleted status |
 
-## Get User
+### Get User
 
 ```tsx
-// By username or ID
 const { result } = useOne({ resource: "users", dataProviderName: "user", id: "john_doe" });
-// result.data → { id, username, email, first_name, last_name, is_active, ... }
-
 // Current authenticated user
 const { result } = useOne({ resource: "users", dataProviderName: "user", id: "me" });
 ```
 
-## Create User
+### Create User
 
 ```tsx
 const { mutate } = useCreate();
@@ -68,7 +78,7 @@ mutate({
 });
 ```
 
-## Update User
+### Update User
 
 ```tsx
 const { mutate } = useUpdate();
@@ -80,14 +90,14 @@ mutate({
 });
 ```
 
-## Delete User
+### Delete User
 
 ```tsx
 const { mutate } = useDelete();
 mutate({ resource: "users", dataProviderName: "user", id: "jane" });
 ```
 
-## Get User Roles
+### Get User Roles
 
 ```tsx
 const { result } = useList({
@@ -95,10 +105,9 @@ const { result } = useList({
   dataProviderName: "user",
   meta: { username: "john_doe" },
 });
-// result.data → [{ id, name, permissions, ... }]
 ```
 
-## Get User Apps
+### Get User Apps
 
 ```tsx
 const { result } = useList({
@@ -106,5 +115,10 @@ const { result } = useList({
   dataProviderName: "user",
   meta: { username: "john_doe" },
 });
-// result.data → [{ name, slug, icon, url, display_name }]
 ```
+
+## Gotchas
+
+- **Missing `dataProviderName: "user"`** — forgetting it routes the call to the default database provider, returning confusing errors.
+- **User search** — use the `search` filter field, not `username__contains`. The backend search covers username, email, and name.
+- **Role assignment is a separate operation** — creating a user does not assign roles. Use `sdk_client.users.assign_roles()` in a function, or the roles API separately.

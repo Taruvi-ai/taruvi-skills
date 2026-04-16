@@ -34,7 +34,7 @@ Rules:
 5. **After implementation, verify against the skill's checklist.** If any checklist item fails, fix it before presenting the work as done.
 
 Common violations to avoid:
-- Using `useList` with `aggregate`/`groupBy` for dashboard elements that need data from 2+ tables (use analytics queries instead)
+- Using `useList` with `aggregate`/`groupBy` for dashboard elements that need data from 2 or more tables (use analytics queries instead)
 - Omitting search bar and filter controls on list pages
 - Using static `Select` instead of debounced `Autocomplete` for backend-loaded options
 - Skipping `accessControlProvider` wiring without asking the user
@@ -55,10 +55,10 @@ Common violations to avoid:
 
 Identify which mode applies before doing anything:
 
-| Mode | Signals |
-|---|---|
-| **Greenfield** | No existing Taruvi code, scaffolding from scratch |
-| **Existing app** | Project has `@taruvi/sdk`, `.env` with `TARUVI_*` keys, or existing provider/function code |
+| Mode | Signals                                                                                                     |
+|---|-------------------------------------------------------------------------------------------------------------|
+| **Greenfield** | No existing Taruvi code, scaffolding from scratch                                                           |
+| **Existing app** | Project has `@taruvi/sdk`, `.env` or `.env.example`with `TARUVI_*` keys, or existing provider/function code |
 
 For existing apps — read the relevant existing files first. Understand what is already built before proposing changes.
 
@@ -121,8 +121,13 @@ For everything else — use provider hooks directly, no function needed.
 | Any frontend page, hook, or provider code | `taruvi-refine-providers` |
 | List pages, detail views, filtered tables | `taruvi-database` |
 | Dashboards, KPI cards, charts, summaries | `taruvi-database` |
+| Dashboard elements needing data from 2 or more tables | `taruvi-analytics` |
 | File upload, download, storage, attachments | `taruvi-storage` |
-| Multi-resource operations, backend logic, events, cron | `taruvi-functions` |
+| Calling a serverless function from frontend | `taruvi-functions` |
+| Writing/editing Python serverless functions | `taruvi-functions-backend` |
+| Login, logout, signup, session, token issues | `taruvi-auth` |
+| Permission checks, role-based UI, 403 errors | `taruvi-access-control` |
+| User CRUD, role assignment, user profiles | `taruvi-users` |
 
 **Most app-building tasks require 2+ skills.** For example:
 - "Build an employee list page" → `taruvi-refine-providers` + `taruvi-database`
@@ -137,7 +142,7 @@ Find and read the `SKILL.md` for each required skill. Do not hardcode a path —
 If the task includes a dashboard, KPI cards, charts, or summary metrics:
 
 - **Single-table aggregates** → use datatable provider with `useList` + `meta.aggregate`/`groupBy`. This is the default for most dashboards.
-- **Multi-table visualizations** → use saved analytics queries via `appDataProvider` + `useCustom` with `meta.kind: "analytics"`. This is required when a dashboard element (card, chart, metric, or any visual) needs to combine data from 2+ tables to render.
+- **Multi-table visualizations** → use saved analytics queries via `appDataProvider` + `useCustom` with `meta.kind: "analytics"`. This is required when a dashboard element (card, chart, metric, or any visual) needs to combine data from 2 or more tables to render.
 - **Row query + derive in React** is never allowed for summary metrics. Always push aggregation to the server.
 
 **Before writing any dashboard query, check:** does this metric/chart need data from more than one table? For example, "revenue by department" needs orders + departments — that's 2 tables, so use analytics. "Orders by status" only needs the orders table — use datatable aggregate.
@@ -206,7 +211,7 @@ Include visible search and filter controls unless the user explicitly asks for a
 
 ## Rules (always apply)
 
-- **Dashboards** — single-table metrics use datatable `aggregate`/`groupBy`. When a dashboard element needs data from 2+ tables, use saved analytics queries. Never fetch full row sets into React to derive summary metrics.
+- **Dashboards** — single-table metrics use datatable `aggregate`/`groupBy`. When a dashboard element needs data from 2 or more tables, use saved analytics queries. Never fetch full row sets into React to derive summary metrics.
 - **Functions** — use a serverless function whenever there is any cross-resource side effect, even if it seems minor.
 - **Lists** — backend pagination, server-side search/filter/sort, visible search + filter controls, `useDataGrid` for MUI DataGrid. No exceptions unless the user explicitly asks.
 - **Dropdowns** — debounced server-side `Autocomplete` with pagination. No static `Select` with one-shot loads.

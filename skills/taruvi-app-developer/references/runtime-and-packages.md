@@ -16,6 +16,6 @@
 
 ## Query Strategy for Dashboards
 
-- Single-table metrics: use datatable provider with `aggregate`/`groupBy`.
-- Dashboard elements needing data from 2+ tables: use saved analytics queries via the `app` provider.
+- Dashboard elements needing data from 1 table: use datatable provider with `aggregate`/`groupBy`.
+- Dashboard elements needing data from 2 or more tables: use saved analytics queries via the `app` provider.
 - Never fetch full row sets into React to derive summary metrics.

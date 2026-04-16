@@ -27,27 +27,24 @@ Reference module for Taruvi storage workflows — bucket management, object uplo
 - Applying prefix/MIME/size/date filters to object listings
 - Surfacing bucket quota usage in the UI
 
-**Do not use this skill for:** database table CRUD (use `taruvi-database` skill), user data (use `taruvi-refine-providers` skill), or multi-resource storage + database operations (use `taruvi-functions` skill).
+**Do not use this skill for:** database table CRUD (use `taruvi-database` skill), user data (use `taruvi-users` skill), or multi-resource storage + database operations (use `taruvi-functions` skill).
 
 ## Step-by-Step Instructions
 
-1. Open and read `../taruvi-refine-providers/references/storage-provider.md` for the full storage API reference (upload, download, list, filters, metadata, batch operations).
-2. Identify the operation needed:
-   - **Single upload** → `PUT|POST /api/apps/{app_slug}/storage/buckets/{bucket}/objects/{key}`
-   - **Bulk upload** → batch-upload endpoint (max 10 files / 100MB per call)
-   - **Bulk delete** → batch-delete endpoint (max 100 paths per call)
-   - **List with filters** → GET with query params (`prefix`, `mimetype`, `size__gte`, etc.)
-3. Set bucket `visibility` at the bucket level; override per-object only when needed.
-4. For quota-aware UX, call the usage endpoint and display a warning — do not rely on upload blocking.
-5. For document/attachment flows, default to multi-file upload UX:
+1. Identify the operation needed:
+   - **Single upload** → `useCreate` with `dataProviderName: "storage"`
+   - **Bulk upload** → batch-upload (max 10 files / 100MB per call)
+   - **Bulk delete** → `useDeleteMany` (max 100 paths per call)
+   - **List with filters** → `useList` with `dataProviderName: "storage"`
+2. Set bucket `visibility` at the bucket level; override per-object only when needed.
+3. For quota-aware UX, call the usage endpoint and display a warning — do not rely on upload blocking.
+4. For document/attachment flows, default to multi-file upload UX:
    - allow selecting/uploading multiple files per action by default
    - process each file independently and capture per-file success/failure
-   - keep storage object and metadata record creation/deletion consistent (cleanup storage on metadata failure where possible)
+   - keep storage object and metadata record creation/deletion consistent
    - after upload/delete, invalidate/refetch file lists so UI reflects current backend state
 
 ### Verification checklist
-
-After writing storage code, verify:
 
 - [ ] Bucket has `app_category` set (`assets` or `attachments`)
 - [ ] `allowed_mime_types` is configured if the bucket should restrict file types
@@ -58,56 +55,86 @@ After writing storage code, verify:
 - [ ] Multi-file uploads report per-file status instead of a single aggregate success
 - [ ] Metadata and storage-object state remain consistent when one step fails
 
-## Examples
+## API Reference
 
-**Upload via Refine provider hook:**
-```typescript
-const { mutate: upload } = useCreate();
+### List Files
 
-upload({
-  resource: "my-bucket",
+```tsx
+const { result } = useList({
+  resource: "documents", // bucket name
   dataProviderName: "storage",
-  variables: {
-    files: [file],
-    paths: ["uploads/profile-photo.jpg"],
-    metadatas: [{ description: "Profile photo" }],
+});
+```
+
+### Get File URL
+
+```tsx
+const { result } = useOne({
+  resource: "documents",
+  dataProviderName: "storage",
+  id: "uploads/document.pdf",
+});
+```
+
+### Upload Files
+
+```tsx
+const { mutate } = useCreate();
+mutate({
+  resource: "documents",
+  dataProviderName: "storage",
+  values: {
+    files: [file1, file2],
+    paths: ["file1.pdf", "file2.pdf"],
+    metadatas: [{ tag: "report" }, {}],
   },
 });
 ```
 
-**Batch delete:**
-```typescript
-const { mutate: deleteMany } = useDeleteMany();
+### Batch Delete
 
-deleteMany({
-  resource: "my-bucket",
+```tsx
+const { mutate } = useDeleteMany();
+mutate({
+  resource: "documents",
   dataProviderName: "storage",
-  ids: ["uploads/old-photo.jpg", "uploads/draft.pdf"],
+  ids: ["path/to/file1.pdf", "path/to/file2.pdf"],
 });
 ```
 
-**List with prefix filter:**
-```typescript
-const { data } = useList({
-  resource: "my-bucket",
+### Update File Metadata
+
+```tsx
+const { mutate } = useUpdate();
+mutate({
+  resource: "documents",
   dataProviderName: "storage",
-  filters: [{ field: "prefix", operator: "eq", value: "uploads/2024/" }],
+  id: "uploads/document.pdf",
+  values: { metadata: { tag: "reviewed" }, visibility: "public" },
+});
+```
+
+### Filter Files
+
+```tsx
+const { result } = useList({
+  resource: "documents",
+  dataProviderName: "storage",
+  filters: [
+    { field: "mimetype_category", operator: "eq", value: "image" },
+    { field: "size", operator: "lte", value: 5242880 },
+  ],
 });
 ```
 
 ## Gotchas
 
-- **Uploading to an existing path** — upsert behavior: the object is replaced silently with no warning from the API. Always warn users in UI if overwrite is unintentional.
-- **Visibility mismatch** — per-object visibility overrides the bucket default. A `private` file in a `public` bucket stays private. This is the most common source of "why can't I access this file" bugs.
-- **Batch upload limit** — max 10 files and 100MB per batch-upload call. Exceeding either limit returns a 400 with no partial success. Split larger sets into multiple calls.
-- **Batch delete limit** — max 100 paths per batch-delete call. Unlike upload, batch delete supports partial success — some paths may delete while others fail.
-- **Quota is advisory** — quotas are monitoring/alerting only, not hard upload blockers. The API will accept uploads even when quota is exceeded. Surface the usage warning in UX rather than preventing upload.
-- **`allowed_mime_types` rejects silently** — if a bucket has `allowed_mime_types: ["image/*"]` and you upload a PDF, the API rejects it with a generic 400. The error message does not mention MIME types. Check bucket config first when uploads fail.
-- **Missing `app_category`** — bucket creation requires `app_category` (`assets` or `attachments`). Omitting it returns a validation error, not a helpful message.
-- **`dataProviderName: "storage"` is required** — forgetting `dataProviderName` on `useCreate`/`useList`/`useDeleteMany` routes the call to the default (database) provider, which returns confusing "resource not found" errors.
-- **Single-file-only UX for document workflows** — attachment flows should support multi-file selection by default; forcing one-file-at-a-time creates unnecessary user friction.
-- **All-or-nothing status for batch uploads** — if one file fails, do not hide successful uploads; show per-file outcomes and surface exact failures.
-
-## References
-
-- `../taruvi-refine-providers/references/storage-provider.md` — full endpoint reference, bucket/object rules, advanced filters, quota semantics
+- **Uploading to an existing path** — upsert behavior: the object is replaced silently. Always warn users in UI.
+- **Visibility mismatch** — per-object visibility overrides the bucket default. A `private` file in a `public` bucket stays private.
+- **Batch upload limit** — max 10 files and 100MB per call. Exceeding returns a 400 with no partial success.
+- **Batch delete limit** — max 100 paths per call. Supports partial success.
+- **Quota is advisory** — the API does not block uploads when quota is exceeded. Surface as a warning.
+- **`allowed_mime_types` rejects silently** — generic 400, no mention of MIME types. Check bucket config first.
+- **Missing `app_category`** — bucket creation requires `app_category` (`assets` or `attachments`).
+- **`dataProviderName: "storage"` is required** — forgetting it routes to the database provider.
+- **Single-file-only UX** — attachment flows should support multi-file selection by default.
