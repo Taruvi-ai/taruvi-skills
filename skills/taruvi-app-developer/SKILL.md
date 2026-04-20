@@ -119,15 +119,17 @@ For everything else — use provider hooks directly, no function needed.
 | If the task involves… | You MUST load |
 |---|---|
 | Any frontend page, hook, or provider code | `taruvi-refine-providers` |
-| List pages, detail views, filtered tables | `taruvi-database` |
-| Dashboards, KPI cards, charts, summaries | `taruvi-database` |
-| Dashboard elements needing data from 2 or more tables | `taruvi-analytics` |
-| File upload, download, storage, attachments | `taruvi-storage` |
+| List pages, detail views, filtered tables | `taruvi-database` + `taruvi-database-backend` |
+| Dashboards, KPI cards, charts, summaries | `taruvi-database` + `taruvi-database-backend` |
+| Dashboard elements needing data from 2 or more tables | `taruvi-analytics` + `taruvi-analytics-backend` |
+| File upload, download, storage, attachments | `taruvi-storage` + `taruvi-storage-backend` |
 | Calling a serverless function from frontend | `taruvi-functions` |
 | Writing/editing Python serverless functions | `taruvi-functions-backend` |
-| Login, logout, signup, session, token issues | `taruvi-auth` |
-| Permission checks, role-based UI, 403 errors | `taruvi-access-control` |
-| User CRUD, role assignment, user profiles | `taruvi-users` |
+| Login, logout, signup, session, token issues | `taruvi-auth` + `taruvi-auth-backend` |
+| Permission checks, role-based UI, 403 errors | `taruvi-access-control` + `taruvi-access-control-backend` |
+| User CRUD, role assignment, user profiles | `taruvi-users` + `taruvi-users-backend` |
+
+**Always load the backend skill alongside the frontend skill.** The backend skill documents what the server supports (operators, filters, limits, behavior). The frontend skill documents how to use it from React. Building frontend without knowing backend capabilities leads to broken queries and missing features.
 
 **Most app-building tasks require 2+ skills.** For example:
 - "Build an employee list page" → `taruvi-refine-providers` + `taruvi-database`

@@ -72,6 +72,21 @@ Each provider has its own self-contained skill. Load the one you need:
 | `authProvider` | — | `taruvi-auth` |
 | `accessControlProvider` | — | `taruvi-access-control` |
 
+## Supported Operations by Provider
+
+| Hook | `default` | `storage` | `app` | `user` |
+|---|---|---|---|---|
+| `useList` / `getList` | ✅ | ✅ | ✅ (`roles`, `secrets`) | ✅ |
+| `useOne` / `getOne` | ✅ | ✅ | ✅ (`settings`, `secrets`) | ✅ |
+| `useMany` / `getMany` | ✅ | ❌ | ❌ | ❌ |
+| `useCreate` / `create` | ✅ | ✅ (upload) | ❌ | ✅ |
+| `useCreateMany` / `createMany` | ✅ | ✅ (batch upload) | ❌ | ❌ |
+| `useUpdate` / `update` | ✅ | ✅ (metadata) | ❌ | ✅ |
+| `useUpdateMany` / `updateMany` | ✅ | ❌ | ❌ | ❌ |
+| `useDelete` / `deleteOne` | ✅ | ✅ | ❌ | ✅ |
+| `useDeleteMany` / `deleteMany` | ✅ | ✅ | ❌ | ❌ |
+| `useCustom` / `custom` | ✅ | ✅ | ✅ (`meta.kind: function/analytics`) | ❌ |
+
 ## App Provider — Roles, Settings, Secrets
 
 These operations use `appDataProvider` directly and don't have a separate skill yet:
@@ -104,6 +119,7 @@ const { result } = useList({
 - All data flows through provider hooks — no direct REST/fetch calls from components
 - Use Refine `notificationProvider` for success/error feedback — no custom toast systems
 - `dataProviderName` is required on all non-default provider calls (`"storage"`, `"app"`, `"user"`)
+- Always use optional chaining (`?.`) when accessing properties on hook results — data may be `undefined` during loading (e.g., `result?.data?.map(...)`, not `result.data.map(...)`)
 
 ## Verification Checklist
 
