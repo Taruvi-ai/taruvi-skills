@@ -183,6 +183,8 @@ manage_policies(action="create_update", policy_data={...})
 
 **Replaces the entire policy body.** If you want to add a rule to an existing policy, `get` it first, append to `rules[]`, and send the full body back.
 
+When creating with `policy_type="resource"` and `entity_type` (e.g., `"datatable"`), the response includes `entity_actions` — the list of valid actions for that entity type. Use these to populate your `rules[].actions`.
+
 Enable/disable without deleting:
 ```
 manage_policies(action="disable", policy_id="datatable:orders:default")
@@ -191,11 +193,12 @@ manage_policies(action="enable",  policy_id="datatable:orders:default")
 
 ## Common mistakes
 
+See also: Gotchas in SKILL.md for cross-cutting warnings (policy replacement, etc.).
+
 1. **Forgetting DENY precedence** — a DENY rule on `roles: ["*"]` will override every ALLOW. Put broad DENYs last and scope them narrowly.
 2. **Using the wrong condition scope** — `P` vs `R` vs `request.aux` confusion. `P` = principal (the user making the request), `R` = resource (the thing being acted on).
 3. **Policy ID format** — the `policy_id` used in `enable`/`disable` is `<resource>:<version>` (or the principal equivalent). Verify via `get` first.
 4. **Skipping `version`** — always set `"version": "default"` unless you're versioning on purpose.
-5. **Trying to merge** — `create_update` fully replaces. Always fetch-then-modify for updates.
 
 ## When to escalate to raw Cerbos docs
 

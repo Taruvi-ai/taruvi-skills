@@ -87,7 +87,7 @@ The tool will warn if it sees both in one batch. Don't ignore the warning.
 
 ## Auto-reflect
 
-`auto_reflect=True` (default) means after DDL, the tool walks the altered schema and updates Taruvi's internal metadata (Alembic revision history, Frictionless schema cache). **Known bug:** the docstring says the default is `False` but the signature says `True`. Trust the signature.
+`auto_reflect=True` (default) means after DDL, the tool walks the altered schema and updates Taruvi's internal metadata (Alembic revision history, Frictionless schema cache).
 
 ## Max rows
 
@@ -95,13 +95,13 @@ The tool will warn if it sees both in one batch. Don't ignore the warning.
 
 ## Common mistakes
 
-1. **Using raw SQL for routine CRUD.** Use `datatable_data`. It's auditable and schema-aware.
-2. **String-formatting values into SQL.** Always use `%(name)s` + `params`.
-3. **Mixing DDL and DML in the same call.** Run DDL first, check results, then DML.
-4. **Forgetting `max_rows`.** Default is 1000; a `SELECT *` on a large table silently truncates.
-5. **Assuming the audit log captures everything.** DML is audited; SELECT is not. Don't use raw SQL for sensitive reads and assume it's logged.
-6. **Trying to `DROP TABLE`.** Blocked. Use `delete_datatable(table_name, force=...)`.
-7. **Running `ALTER TABLE` that drops a column, then expecting the Taruvi schema to auto-catch up.** `auto_reflect` helps but isn't infallible. Prefer `create_update_schema` for field drops.
+See also: Gotchas in SKILL.md for cross-cutting warnings (DDL commit behavior, tool preference hierarchy, etc.).
+
+1. **String-formatting values into SQL.** Always use `%(name)s` + `params`.
+2. **Forgetting `max_rows`.** Default is 1000; a `SELECT *` on a large table silently truncates.
+3. **Assuming the audit log captures everything.** DML is audited; SELECT is not. Don't use raw SQL for sensitive reads and assume it's logged.
+4. **Trying to `DROP TABLE`.** Blocked. Use `delete_datatable(table_name, force=...)`.
+5. **Running `ALTER TABLE` that drops a column, then expecting the Taruvi schema to auto-catch up.** `auto_reflect` helps but isn't infallible. Prefer `create_update_schema` for field drops.
 
 ## When is raw SQL actually the right tool?
 

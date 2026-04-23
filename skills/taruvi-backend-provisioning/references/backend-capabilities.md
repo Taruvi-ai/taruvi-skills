@@ -71,6 +71,8 @@ The backend supports nested AND/OR/NOT:
 
 ## Datatable aggregation
 
+**Note:** Aggregation is available via the REST API and Refine data providers, not via the `datatable_data` MCP tool. Use `execute_raw_sql` or `manage_query` for aggregation via MCP.
+
 Supported functions: `count(*)`, `count(field)`, `sum(field)`, `avg(field)`, `min(field)`, `max(field)`, `array_agg(field)`, `string_agg(field)`, `json_agg(field)`, `stddev(field)`, `variance(field)`.
 
 Complex expressions with aliases: `sum(total) as revenue`, `avg(extract(epoch from (end_time - start_time)) / 86400) as avg_days`.
@@ -112,15 +114,15 @@ HAVING filters groups after aggregation — only works with GROUP BY.
 
 ### Storage bucket configuration
 
-| Field | Required | Default |
-|---|---|---|
-| `name` | Yes | — |
-| `app_category` | Yes | `assets` or `attachments` |
-| `visibility` | No | `private` |
-| `file_size_limit` | No | 50MB (52428800 bytes) |
-| `allowed_mime_types` | No | Empty = all allowed. Supports exact (`application/pdf`) or wildcard (`image/*`) |
-| `max_size_bytes` | No | Advisory quota |
-| `max_objects` | No | Advisory quota |
+| Field | Required | Default | MCP `create_bucket` |
+|---|---|---|---|
+| `name` | Yes | — | ✅ |
+| `app_category` | Yes | `assets` or `attachments` | ✅ |
+| `visibility` | No | `private` | ✅ |
+| `max_size_bytes` | No | Advisory quota | ✅ |
+| `file_size_limit` | No | 50MB (52428800 bytes) | ❌ REST API only |
+| `allowed_mime_types` | No | Empty = all allowed. Supports exact (`application/pdf`) or wildcard (`image/*`) | ❌ REST API only |
+| `max_objects` | No | Advisory quota | ❌ REST API only |
 
 ### Storage upload behavior
 - Uploading to an existing path **replaces** the object silently (upsert). No warning from API.

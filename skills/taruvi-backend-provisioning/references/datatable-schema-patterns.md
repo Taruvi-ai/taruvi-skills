@@ -11,7 +11,7 @@ The full shape of the `datapackage` argument to `create_update_schema`. Taruvi f
       "name": "orders",
       "schema": {
         "fields": [
-          {"name": "id", "type": "integer", "constraints": {"required": true}},
+          {"name": "id", "type": "string", "format": "uuid", "constraints": {"required": true}},
           {"name": "title", "type": "string", "constraints": {"maxLength": 255}},
           {"name": "created_at", "type": "datetime"}
         ],
@@ -21,6 +21,8 @@ The full shape of the `datapackage` argument to `create_update_schema`. Taruvi f
   ]
 }
 ```
+
+**Prefer UUID IDs for new tables** (`"type": "string", "format": "uuid"`). Integer IDs work but UUIDs are the recommended default.
 
 One call can create or update many tables by adding more entries to `resources[]`.
 
@@ -55,8 +57,8 @@ Per-field `constraints` object:
   "name": "line_items",
   "schema": {
     "fields": [
-      {"name": "id", "type": "integer"},
-      {"name": "order_id", "type": "integer"}
+      {"name": "id", "type": "string", "format": "uuid"},
+      {"name": "order_id", "type": "string", "format": "uuid"}
     ],
     "primaryKey": ["id"],
     "foreignKeys": [
@@ -65,7 +67,8 @@ Per-field `constraints` object:
         "reference": {
           "resource": "orders",
           "fields": ["id"]
-        }
+        },
+        "x-actions": {"onDelete": "CASCADE"}
       }
     ]
   }
@@ -73,6 +76,20 @@ Per-field `constraints` object:
 ```
 
 FK names must reference another table in the same datapackage or an already-materialized one.
+
+### Referential delete actions (`x-actions.onDelete`)
+
+Control what happens when a referenced row is deleted:
+
+| Value | Behavior |
+|---|---|
+| `RESTRICT` | Block delete if references exist (default) |
+| `CASCADE` | Delete referencing rows |
+| `SET NULL` | Set FK column to NULL (field must be nullable) |
+| `SET DEFAULT` | Set FK column to its default (field must have a default) |
+| `NO ACTION` | Same as RESTRICT but checked at end of transaction |
+
+System resources `auth_user` and `storage_objects` (bucket file metadata) can be used as FK targets.
 
 ## Indexes (Taruvi extension: `indexes`)
 
@@ -82,15 +99,19 @@ FK names must reference another table in the same datapackage or an already-mate
     "fields": [...],
     "primaryKey": ["id"],
     "indexes": [
-      {"fields": ["created_at"], "type": "btree"},
-      {"fields": ["customer_id", "status"], "unique": false},
-      {"fields": ["metadata"], "type": "gin"}
+      {"name": "idx_created", "fields": ["created_at"], "type": "btree"},
+      {"name": "idx_cust_status", "fields": ["customer_id", "status"], "unique": false},
+      {"name": "idx_metadata", "fields": ["metadata"], "type": "gin"},
+      {"name": "idx_email_lower", "expression": "LOWER(email)", "unique": true},
+      {"name": "idx_active_only", "fields": ["created_at"], "where": "is_active = true"}
     ]
   }
 }
 ```
 
 Types: `btree` (default), `hash`, `gin`, `gist`, `brin`. GIN is required for JSONB search.
+
+Index properties: `name` (required), `fields` or `expression` (one required), `type`/`method`, `unique`, `where` (partial index condition), `using`, `comment`.
 
 ## Search fields (Taruvi extension: `search_fields`)
 
@@ -101,14 +122,24 @@ Declares which fields are searchable via the `?search=<query>` URL parameter whe
   "schema": {
     "fields": [...],
     "search_fields": [
-      {"field": "title", "weight": 1.0},
-      {"field": "description", "weight": 0.5}
+      {"field": "title", "weight": "A"},
+      {"field": "description", "weight": "B"}
     ]
   }
 }
 ```
 
-Weights are relative; Postgres `ts_rank` uses them via a generated tsvector column.
+Weights are Postgres tsvector weight letters: `A` (highest), `B`, `C`, `D` (lowest). Plain strings (without a weight) default to `D`.
+
+Options: `search_language` (default `"english"`) and `search_config` (default `"english"`) control the Postgres text search configuration. Set these for non-English content:
+
+```json
+{
+  "search_language": "spanish",
+  "search_config": "spanish",
+  "search_fields": ["titulo", {"field": "cuerpo", "weight": "B"}]
+}
+```
 
 ## Hierarchy (parent/child closure)
 
@@ -146,6 +177,23 @@ Creates a closure table. Query descendants/ancestors via `datatable_data` meta o
 
 Creates an `<table>_edges` companion table. Use `datatable_edges` to manipulate edges. Each edge has `from_id`, `to_id`, `type`, `metadata` (JSONB), `created_by_id`, `created_at`.
 
+### Advanced graph: inverse relationships and typed edge metadata
+
+```json
+{
+  "graph": {
+    "enabled": true,
+    "types": [
+      {"name": "manager", "inverse": "direct_reports"},
+      {"name": "mentor", "metadata": {"fields": [{"name": "since", "type": "date"}]}}
+    ]
+  }
+}
+```
+
+- `inverse` — declares the reverse edge name (querying `direct_reports` of node X returns nodes where X is `manager`).
+- `metadata.fields` — typed fields stored on each edge of this type, queryable via `datatable_edges`.
+
 ## Column rename (`x-rename-from`)
 
 To rename a column on an existing table without dropping data:
@@ -172,12 +220,13 @@ Dots traverse nested FKs. Use `*` to populate all one-hop FKs.
 
 ## Common mistakes
 
+See also: Gotchas in SKILL.md for cross-cutting warnings (field dropping, policy replacement, etc.).
+
 1. **Omitting `primaryKey`** — every table must declare one. Single-field PK: `"primaryKey": ["id"]`. Composite: `"primaryKey": ["tenant_id", "order_id"]`.
-2. **Dropping fields by accident** — `create_update_schema` drops fields not present in the new payload. Always `get_datatable_schema` first and preserve fields you want to keep.
-3. **Changing a column type in place** — usually works but may fail on existing data. Safer to add a new column, migrate data via `datatable_data` upserts or raw SQL, then drop the old column.
-4. **Adding a `required` constraint to an existing column with NULLs** — fails. Either backfill first or add a default.
-5. **Foreign key to a non-existent table in the same datapackage** — order `resources[]` so referenced tables come first, or submit them in separate `create_update_schema` calls.
-6. **Forgetting `indexes` on frequently-filtered columns** — Taruvi won't add indexes automatically beyond the PK. Add explicit indexes for filter/sort columns.
+2. **Changing a column type in place** — usually works but may fail on existing data. Safer to add a new column, migrate data via `datatable_data` upserts or raw SQL, then drop the old column.
+3. **Adding a `required` constraint to an existing column with NULLs** — fails. Either backfill first or add a default.
+4. **Foreign key to a non-existent table in the same datapackage** — order `resources[]` so referenced tables come first, or submit them in separate `create_update_schema` calls.
+5. **Forgetting `indexes` on frequently-filtered columns** — Taruvi won't add indexes automatically beyond the PK. Add explicit indexes for filter/sort columns.
 
 ## Worked example: blog schema
 
@@ -188,7 +237,7 @@ Dots traverse nested FKs. Use `*` to populate all one-hop FKs.
       "name": "authors",
       "schema": {
         "fields": [
-          {"name": "id", "type": "integer", "constraints": {"required": true}},
+          {"name": "id", "type": "string", "format": "uuid", "constraints": {"required": true}},
           {"name": "name", "type": "string", "constraints": {"required": true, "maxLength": 255}},
           {"name": "bio", "type": "string"}
         ],
@@ -199,8 +248,8 @@ Dots traverse nested FKs. Use `*` to populate all one-hop FKs.
       "name": "posts",
       "schema": {
         "fields": [
-          {"name": "id", "type": "integer", "constraints": {"required": true}},
-          {"name": "author_id", "type": "integer", "constraints": {"required": true}},
+          {"name": "id", "type": "string", "format": "uuid", "constraints": {"required": true}},
+          {"name": "author_id", "type": "string", "format": "uuid", "constraints": {"required": true}},
           {"name": "title", "type": "string", "constraints": {"required": true, "maxLength": 500}},
           {"name": "body", "type": "string"},
           {"name": "status", "type": "string", "constraints": {"enum": ["draft", "published"]}},
@@ -213,12 +262,12 @@ Dots traverse nested FKs. Use `*` to populate all one-hop FKs.
           {"fields": ["author_id"], "reference": {"resource": "authors", "fields": ["id"]}}
         ],
         "indexes": [
-          {"fields": ["status", "published_at"]},
-          {"fields": ["author_id"]}
+          {"name": "idx_status_pub", "fields": ["status", "published_at"]},
+          {"name": "idx_author", "fields": ["author_id"]}
         ],
         "search_fields": [
-          {"field": "title", "weight": 1.0},
-          {"field": "body", "weight": 0.5}
+          {"field": "title", "weight": "A"},
+          {"field": "body", "weight": "B"}
         ]
       }
     }

@@ -105,9 +105,9 @@ list_secrets(analytics_only=True)
 
 ## Common mistakes
 
-1. **Creating the secret before the type** — fails. Always type-first.
-2. **Trying to change `sensitivity_level`** — immutable. Delete and recreate (and re-reference everywhere).
-3. **Expecting to read `sensitive` values via MCP** — masked by design. Use the Python SDK inside a function body.
-4. **Duplicate `name` for types** — blocked. Types are unique by name.
-5. **Deleting a type with existing secrets** — blocked by FK constraint. Delete or migrate secrets first.
-6. **Forgetting `app_slug` outside an app context** — `create_update_secret` enforces app-level scope on the MCP surface. Make sure the app context is set or pass `app_slug` explicitly.
+See also: Gotchas in SKILL.md for cross-cutting warnings (type-first rule, sensitivity immutability, etc.).
+
+1. **Expecting to read `sensitive` values via MCP** — masked by design. Use the Python SDK inside a function body.
+2. **Duplicate `name` for types** — blocked. Types are unique by name.
+3. **Deleting a type with existing secrets** — blocked by FK constraint. Delete or migrate secrets first.
+4. **Forgetting `app_slug` outside an app context** — `create_update_secret` enforces app-level scope on the MCP surface. Make sure the app context is set or pass `app_slug` explicitly.

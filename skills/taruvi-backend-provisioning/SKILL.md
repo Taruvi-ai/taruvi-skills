@@ -61,8 +61,8 @@ The most common workflow. See [references/datatable-schema-patterns.md](referenc
          "name": "orders",
          "schema": {
            "fields": [
-             {"name": "id", "type": "integer", "constraints": {"required": true}},
-             {"name": "customer_id", "type": "integer"},
+             {"name": "id", "type": "string", "format": "uuid", "constraints": {"required": true}},
+             {"name": "customer_id", "type": "string", "format": "uuid"},
              {"name": "total", "type": "number"},
              {"name": "created_at", "type": "datetime"}
            ],
@@ -79,18 +79,6 @@ The most common workflow. See [references/datatable-schema-patterns.md](referenc
    ```
    Materializes the physical PostgreSQL table automatically. Returns created/updated/error counts.
 
-### Type mapping (Frictionless → Postgres)
-
-| Frictionless | Postgres |
-|---|---|
-| `string` | TEXT |
-| `integer` | INTEGER |
-| `number` | NUMERIC |
-| `boolean` | BOOLEAN |
-| `date` | DATE |
-| `datetime` | TIMESTAMP WITH TIME ZONE |
-| `object`, `array` | JSONB |
-
 ### Adding indexes, FKs, search, graph
 
 Advanced features (indexes, foreign keys, populate, search, hierarchy/graph edges, column renames) live in [references/datatable-schema-patterns.md](references/datatable-schema-patterns.md). Read that file before authoring non-trivial schemas — the Frictionless shape has a lot of Taruvi-specific extensions (`indexes`, `hierarchy`, `graph`, `search_fields`, `x-rename-from`).
@@ -101,9 +89,12 @@ Advanced features (indexes, foreign keys, populate, search, hierarchy/graph edge
 datatable_data(action="query", table_name="orders", filters={"total__gte": 100}, limit=100)
 datatable_data(action="upsert", table_name="orders", data=[{...}, {...}], unique_fields="id")
 datatable_data(action="delete", table_name="orders", ids=[1, 2, 3])
+datatable_data(action="delete", table_name="orders", filters={"status": "cancelled"})
 ```
 
 (`limit` defaults to 100, capped at 1000. Omit the arg to use the default.)
+
+Delete accepts `ids` **or** `filters` (exactly one, not both).
 
 Filter operators follow DRF conventions: `field__gte`, `field__in=1,2,3`, `field__contains=foo`, `field__null=true`, etc.
 
@@ -140,7 +131,7 @@ If the user hasn't specified roles, **list them first**:
 ```
 manage_roles(action="list")
 ```
-Pick an appropriate role from the response and assign via `role_slugs=["..."]` in the create call.
+Pick an appropriate role from the response and assign via `role_slugs=["..."]` in the create call. **Do not prompt the user to select a role** — auto-select based on context (admin-level for admin users, least-privileged for regular users).
 
 ### Roles
 
@@ -167,7 +158,7 @@ user_attributes_schema(action="get")
 user_attributes_schema(action="update", schema={...})   # REPLACES the entire schema
 ```
 
-Requires `manage_site` cloud permission. The schema is JSON Schema Draft 2020-12 and is tenant-wide (singleton). Call `get_ai_docs(category="users", topic="attributes")` if you need the full authoring guide.
+Requires `manage_site` cloud permission. The schema is JSON Schema Draft 2020-12 and is tenant-wide (singleton). **Required:** call `get_ai_docs(category="users", topic="attributes")` before authoring a schema from scratch.
 
 ### Cerbos policies
 
@@ -179,7 +170,7 @@ manage_policies(action="enable", policy_id="...")
 manage_policies(action="disable", policy_id="...")
 ```
 
-Policy authoring is non-trivial. Before writing a policy from scratch, load [references/cerbos-policy-cookbook.md](references/cerbos-policy-cookbook.md) or call `get_ai_docs(category="policies", topic="guide")`.
+Policy authoring is non-trivial. **Required:** before writing a policy from scratch, call `get_ai_docs(category="policies", topic="guide")` or load [references/cerbos-policy-cookbook.md](references/cerbos-policy-cookbook.md).
 
 ## Storage
 
@@ -202,6 +193,8 @@ Before creating a secret, **a secret type must exist** that matches the value's 
 manage_secret_types(action="list")
 manage_secret_types(action="create", name="stripe-cred", description="...", schema={...}, sensitivity_level="sensitive")
 ```
+
+Use `manage_secret_types` for type CRUD. `list_secrets(list_types=True)` is a convenience alias for listing types only.
 
 Then:
 ```
@@ -246,6 +239,9 @@ Execution modes: `app` (Python body runs in Taruvi runtime), `proxy` (forwards t
 ```
 manage_query(action="create", name="daily-revenue", query_text="SELECT ...", connection_type="internal", tags=["reporting"])
 manage_query(action="list")
+manage_query(action="get", query_slug="daily-revenue")
+manage_query(action="update", query_slug="daily-revenue", query_text="SELECT ...", description="Updated")
+manage_query(action="delete", query_slug="daily-revenue")
 execute_query(query_slug="daily-revenue", params={"date": "2026-04-17"})
 ```
 
@@ -274,7 +270,7 @@ Always plan-validate-execute for:
 - `user_attributes_schema(action="update")` (replaces the whole schema)
 - `manage_secret_types(action="delete")`
 - `execute_raw_sql` containing `DROP`, `TRUNCATE`, destructive `ALTER`, or `DELETE` without `WHERE`
-- `delete_function`, `manage_roles(action="delete")`
+- `manage_function(action="delete")`, `manage_roles(action="delete")`
 
 Procedure:
 1. **Plan** — state what will be deleted/replaced and what depends on it. Use `get_datatable_schema`, `manage_policies(action="get")`, etc. to inspect current state.
@@ -284,15 +280,17 @@ Procedure:
 ## Gotchas
 
 1. **`create_update_schema` drops missing fields.** Always `get_datatable_schema` first so your new payload preserves fields that must stay.
-2. **`create_user` without `role_slugs` creates an unroled user.** List roles first with `manage_roles(action="list")` and pick one based on context. Generate a password (12+ chars, mix of classes) if the user didn't provide one.
+2. **`create_user` without `role_slugs` creates an unroled user.** See the "Creating a user" section above for the required workflow. Generate a password (12+ chars, mix of classes) if the user didn't provide one.
 3. **`manage_policies(action="create_update")` replaces, not merges.** Get the existing policy first if you only want to change part of it.
 4. **`delete_datatable` without `force=True` fails on FK deps.** The error lists what depends on the table — read it carefully before suggesting `force=True`.
-5. **Secret types cannot be renamed post-create** and system types cannot be modified at all. Choose names carefully.
+5. **Secret type `sensitivity_level` is immutable post-create.** System types cannot be modified at all. Choose sensitivity carefully — the only fix is delete and recreate.
 6. **`execute_raw_sql` DDL commits immediately**, even if a later statement in the same batch fails. The tool warns when you mix DDL + DML.
 7. **`manage_storage(action="create_bucket")` requires `app_category`**. Pick `"assets"` (public-ish static content) or `"attachments"` (user-uploaded files).
 8. **User updates don't accept password changes.** Use a separate password-reset flow (outside this MCP surface).
-9. **`manage_role_assignments` accepts strings or lists** for both `roles` and `usernames`. Single-value semantics are fine; check the `is_bulk` flag in the response.
-10. **The `is_active=True` default on `list_users`** silently hides inactive users. Pass `is_active=False` or a different filter if you need all users.
+9. **`update_user` attributes are merged, not replaced.** Passing `attributes={"dept": "sales"}` adds/overwrites `dept` but preserves other existing attributes. This is the opposite of `user_attributes_schema(action="update")` which replaces the whole schema.
+10. **`manage_role_assignments` accepts strings or lists** for both `roles` and `usernames`. Single-value semantics are fine; check the `is_bulk` flag in the response.
+11. **The `is_active=True` default on `list_users`** silently hides inactive users. Pass `is_active=False` or a different filter if you need all users.
+12. **`manage_function(action="get")` only returns active functions.** A deactivated function returns "not found", not "inactive". Use `manage_function(action="list")` to see all functions including inactive ones.
 
 ## Verification checklist
 

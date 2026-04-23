@@ -46,8 +46,8 @@ Upsert semantics. Creates if `key` doesn't exist, updates value if it does. Requ
 
 ### `manage_secret_types(action, ...)`
 - `action="list"` → args: `type_filter`, `search`, `limit=50`.
-- `action="create"` → args: `name` (regex `^[a-zA-Z0-9_-]+$`), `description`, `schema` (JSON Schema), `sensitivity_level` (default `"private"`). Sensitivity is immutable post-create.
-- `action="update"` → args: `slug`, optional `description`, `schema`. System types are blocked.
+- `action="create"` → args: `name` (regex `^[a-zA-Z0-9_-]+$`), `description` (**required**), `schema` (JSON Schema), `sensitivity_level` (default `"private"`). Sensitivity is immutable post-create.
+- `action="update"` → args: `slug`, optional `name`, `description`, `schema`. System types are blocked.
 - `action="delete"` → args: `slug`. System types blocked; fails if secrets of this type exist.
 
 ## Users
@@ -71,8 +71,8 @@ Tenant-wide singleton.
 ## Roles
 
 ### `manage_roles(action, ...)`
-- `action="list"` → `include_hierarchy=True`.
-- `action="create"` → `name`, `description`, optional `parent_slug`.
+- `action="list"` → `include_hierarchy=True`. Returns `id`, `name`, `description`, `parent_slug`, `level`. **Note:** `slug` is not returned in list — use `name` for display and the role's `slug` from `create` responses for subsequent operations.
+- `action="create"` → `name`, `description`, optional `parent_slug`. Returns `id`, `name`, `slug`.
 - `action="bulk_create"` → `roles` (list of dicts).
 - `action="delete"` → `role_slug`. Fails if role has members or child roles.
 
@@ -83,7 +83,7 @@ Tenant-wide singleton.
 ## Functions (registration)
 
 ### `manage_function(action, ...)`
-- `action="list"` → optional `execution_mode` filter, `search`, `limit=50`.
+- `action="list"` → optional `execution_mode` filter.
 - `action="create_update"` → `name`, `execution_mode` (`"app"`|`"proxy"`|`"system"`), `code` (app mode), `webhook_url` (proxy mode), `description`, `is_active=True`, `is_public=False` (public functions run unauthenticated), `async_mode=False` (execution returns task_id), `config`, `auth_config`, `headers`, `tags`, optional `function_slug` to force update path.
 - `action="get"` → `function_slug`.
 - `action="delete"` → `function_slug`.
@@ -102,7 +102,7 @@ Sync returns `{success, async: False, result, logs}`. Async returns `{success, a
 ## Analytics
 
 ### `manage_query(action, ...)`
-- `action="list"` → `search`, `limit=50`.
+- `action="list"` → no args. Returns all queries for the current app.
 - `action="get"` → `query_slug`.
 - `action="create"` → `name`, `query_text`, `connection_type` (`"internal"`|`"external"`, default `"external"`), `secret_key` (required for external), `description`, `tags`.
 - `action="update"` → `query_slug`, optional updates.
