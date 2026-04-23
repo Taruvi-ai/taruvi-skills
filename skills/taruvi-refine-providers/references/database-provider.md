@@ -103,7 +103,6 @@ const { result } = useList({
     populate: ["author", "category"], // populate FKs ("*" for all)
     select: ["id", "title", "status"],
     idColumnName: "post_id",          // custom PK column
-    upsert: true,                     // insert or update on conflict (useCreate)
     deleteByFilter: true,             // delete by filter instead of IDs (useDeleteMany)
   },
 });
