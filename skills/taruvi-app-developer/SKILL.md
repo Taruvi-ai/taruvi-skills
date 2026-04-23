@@ -150,6 +150,8 @@ For any backend-backed list or table page, the default implementation must be ba
 - backend pagination is required by default
 - default list `pageSize` is `10`; recommend exposing `10`, `20`, `50`, and `100` as user-selectable options
 - search, filters, and sorting must be server-side by default
+- any backend-driven list search input must use 300–500ms debounce before updating provider filters
+- use a single primary search control per list page — if DataGrid quick filter is enabled, do not also add a separate page-level search for the same fields
 - provide visible list controls for search and common filters by default (for example: status, department, date range, active/inactive)
 - when the list is rendered with MUI `DataGrid`, default to Refine `useDataGrid`
 - client-side filtering or search is only allowed if the user explicitly asks for it or the list is intentionally local-only
@@ -177,6 +179,7 @@ For permission checks in app code:
 - do not rely on `params.entityType` for access-control checks
 - verify runtime payloads in browser network logs: each `check/resources` `resource.kind` must exactly match the requested `resource` string
 - when SDK/provider ACL contract changes, app code must be updated in the same release cycle and versioned accordingly
+- after wiring access control, verify every role's UI path: check that list actions (edit/delete/show buttons), create buttons, and menu items are correctly shown or hidden for each role. Do not mark access control as done until this is verified.
 
 ### Step 9 — Default Bulk Actions to Backend Bulk Operations
 
@@ -215,7 +218,9 @@ Include visible search and filter controls unless the user explicitly asks for a
 - **Package API** — use the installed package's current non-deprecated API surface. Do not copy deprecated patterns from existing code.
 - **Multi-module tasks** — load all relevant SKILL.md files before starting; don't guess from memory.
 - **Unclear project mode** — ask the user: "Is this a new app or does it already have Taruvi providers set up?"
-- **Test users** — if Cerbos policies or access control is configured, ALWAYS create test users for each role and report usernames + passwords. If NO access control, still create at least one test user with default super admin role so the user can log in and test. NEVER skip this.
+- **Test users** — if Cerbos policies or access control is configured, ALWAYS create test users for each role and report usernames + passwords. If NO access control, create one user with the default super admin role so the user can log in and test. Do not skip this.
+- **Verify functions** — after creating a function, execute it via MCP to test it works. If it fails, fix and re-execute until it succeeds. Then check the response format — the frontend must use the exact field names and structure returned. If they don't match, fix the frontend to align with the backend response.
+- **Verify analytics queries** — after creating an analytics query, execute it via MCP to test it works. If it fails, fix and re-execute until it succeeds. Then check the response format — the frontend must reference the exact fields returned. If they don't match, fix the frontend to align with the query response.
 
 ## References
 
