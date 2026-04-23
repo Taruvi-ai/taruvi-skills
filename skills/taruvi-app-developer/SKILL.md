@@ -123,6 +123,7 @@ For everything else — use provider hooks directly, no function needed.
 | Dashboards, KPI cards, charts, summaries | `taruvi-database` |
 | File upload, download, storage, attachments | `taruvi-storage` |
 | Multi-resource operations, backend logic, events, cron | `taruvi-functions` |
+| Creating/modifying and referencing tables, policies, roles, secrets, buckets | `taruvi-backend-provisioning` |
 
 **Most app-building tasks require 2+ skills.** For example:
 - "Build an employee list page" → `taruvi-refine-providers` + `taruvi-database`
@@ -214,6 +215,7 @@ Include visible search and filter controls unless the user explicitly asks for a
 - **Package API** — use the installed package's current non-deprecated API surface. Do not copy deprecated patterns from existing code.
 - **Multi-module tasks** — load all relevant SKILL.md files before starting; don't guess from memory.
 - **Unclear project mode** — ask the user: "Is this a new app or does it already have Taruvi providers set up?"
+- **Test users** — if Cerbos policies or access control is configured, ALWAYS create test users for each role and report usernames + passwords. If NO access control, still create at least one test user with default super admin role so the user can log in and test. NEVER skip this.
 
 ## References
 
