@@ -124,6 +124,7 @@ For everything else — use provider hooks directly, no function needed.
 | File upload, download, storage, attachments | `taruvi-storage` |
 | Multi-resource operations, backend logic, events, cron | `taruvi-functions` |
 | Creating/modifying and referencing tables, policies, roles, secrets, buckets | `taruvi-backend-provisioning` |
+| Exporting backend, Exporting backend config, backup app, sync backend to repo | `taruvi-app-export` |
 
 **Most app-building tasks require 2+ skills.** For example:
 - "Build an employee list page" → `taruvi-refine-providers` + `taruvi-database`
@@ -204,6 +205,8 @@ For user-facing success/error feedback:
 **Existing app refactor:** User says "the cascade delete is broken". Read existing delete handler first, detect multi-resource pattern (tasks + attachments + activities), route to `taruvi-functions/SKILL.md` and rewrite as a serverless function.
 
 **Deploy task:** User says "deploy the frontend". Ask for their deploy target and follow their project's build and deploy workflow.
+
+**Export backend:** User says "export backend" or "backup app config". Read `references/backend-export.md`, call the export API, extract to `.taruvi-backend/`, tell user to commit.
 
 **List + feedback baseline:** For backend-backed list pages, use `useDataGrid` (`pageSize: 10`) and surface success/error via Refine `notificationProvider` (`useNotification`) rather than custom toasts.
 Include visible search and filter controls unless the user explicitly asks for a minimal list.
