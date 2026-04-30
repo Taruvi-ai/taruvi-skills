@@ -205,9 +205,9 @@ For user-facing success/error feedback:
 
 **Existing app refactor:** User says "the cascade delete is broken". Read existing delete handler first, detect multi-resource pattern (tasks + attachments + activities), route to `taruvi-functions/SKILL.md` and rewrite as a serverless function.
 
-**Deploy task:** User says "deploy the frontend". Ask for their deploy target and follow their project's build and deploy workflow.
+**Deploy task:** User says "deploy the frontend". Read `taruvi-app-deploy/SKILL.md` and follow the deploy steps.
 
-**Export backend:** User says "export backend" or "backup app config". Read `references/backend-export.md`, call the export API, extract to `.taruvi-backend/`, tell user to commit.
+**Export backend:** User says "export backend" or "backup app config". Read `taruvi-app-export/SKILL.md` and run the export script.
 
 **List + feedback baseline:** For backend-backed list pages, use `useDataGrid` (`pageSize: 10`) and surface success/error via Refine `notificationProvider` (`useNotification`) rather than custom toasts.
 Include visible search and filter controls unless the user explicitly asks for a minimal list.
