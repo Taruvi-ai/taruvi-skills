@@ -124,7 +124,8 @@ For everything else — use provider hooks directly, no function needed.
 | File upload, download, storage, attachments | `taruvi-storage` |
 | Multi-resource operations, backend logic, events, cron | `taruvi-functions` |
 | Creating/modifying and referencing tables, policies, roles, secrets, buckets | `taruvi-backend-provisioning` |
-| Exporting backend, Exporting backend config, backup app, sync backend to repo | `taruvi-app-export` |
+| Deploying frontend, deploy app, publish app, upload build | `taruvi-app-deploy` |
+| Exporting backend, backup app config, sync backend to repo | `taruvi-app-export` |
 
 **Most app-building tasks require 2+ skills.** For example:
 - "Build an employee list page" → `taruvi-refine-providers` + `taruvi-database`
