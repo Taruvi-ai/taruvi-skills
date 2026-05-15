@@ -138,7 +138,7 @@ useUpdateMany({
 
 **Cause**: The Celery worker didn't enter the right tenant schema. Functions running through the Taruvi runtime handle this automatically, but direct Celery tasks (e.g., custom tasks added outside the function system) won't.
 
-**Fix**: In a custom Celery task, wrap DB ops in `with schema_context(tenant_slug): ...`. In a Taruvi function body, this is automatic — use the `taruvi-functions` skill.
+**Fix**: In a custom Celery task, wrap DB ops in `with schema_context(tenant_slug): ...`. In a Taruvi function body, this is automatic — see [`function-authoring.md`](function-authoring.md).
 
 ## Foreign key to a table not yet materialized
 

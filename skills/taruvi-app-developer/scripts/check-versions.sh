@@ -56,8 +56,8 @@ check_pypi() {
     fi
 }
 
-echo "Taruvi skill version check — taruvi-backend-provisioning"
-echo "---------------------------------------------------------"
+echo "Taruvi skill version check — taruvi-app-developer"
+echo "---------------------------------------------------"
 check_pypi "taruvi" "$PINNED_PYTHON_SDK"
 check_npm "@taruvi/sdk" "$PINNED_JS_SDK"
 check_npm "@taruvi/refine-providers" "$PINNED_REFINE_PROVIDERS"

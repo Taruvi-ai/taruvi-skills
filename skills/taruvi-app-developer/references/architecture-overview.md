@@ -9,6 +9,7 @@ The mental model you need to orchestrate Taruvi app development.
 │  Consuming app (Refine + Taruvi providers)                     │
 │  - React components, Refine hooks, access control              │
 │  - AGENTS.md tells agents about THIS app's conventions         │
+│  → taruvi-refine-providers skill                               │
 └────────────────────────────────────────────────────────────────┘
                          ↓  HTTP + session token
 ┌────────────────────────────────────────────────────────────────┐
@@ -17,12 +18,14 @@ The mental model you need to orchestrate Taruvi app development.
 │  - /api/apps/{slug}/storage/buckets/{slug}/objects/            │
 │  - /api/apps/{slug}/functions/{slug}/execute/                  │
 │  - Function runtime: Celery workers running Python with SDK    │
+│  → taruvi-app-developer skill (this one)                       │
 └────────────────────────────────────────────────────────────────┘
                          ↑  MCP tool calls
 ┌────────────────────────────────────────────────────────────────┐
 │  Agent (Claude Code / Cursor / etc.) with Taruvi MCP server    │
 │  - 24 tools for provisioning backend resources                 │
 │  - Used at BUILD time, not runtime                             │
+│  → taruvi-app-developer skill (this one)                       │
 └────────────────────────────────────────────────────────────────┘
 ```
 
@@ -30,12 +33,13 @@ The mental model you need to orchestrate Taruvi app development.
 
 | What | Where | Skill |
 |---|---|---|
-| "How do I create a datatable?" | MCP tool docs + skill body | `taruvi-backend-provisioning` |
-| "What Frictionless fields are supported?" | `references/datatable-schema-patterns.md` | `taruvi-backend-provisioning` |
-| "How do I write a Cerbos policy?" | `references/cerbos-policy-cookbook.md` | `taruvi-backend-provisioning` |
-| "What's the signature of a function body?" | Skill body | `taruvi-functions` |
-| "How does `signInWithToken` work?" | `references/auth-patterns.md` | `taruvi-functions` |
-| "What meta options does Refine's dataProvider accept?" | `references/meta-options-cookbook.md` | `taruvi-refine-frontend` |
+| "How do I create a datatable?" | MCP tool docs + skill body | `taruvi-app-developer` |
+| "What Frictionless fields are supported?" | [`datatable-schema-patterns.md`](datatable-schema-patterns.md) | `taruvi-app-developer` |
+| "How do I write a Cerbos policy?" | [`cerbos-policy-cookbook.md`](cerbos-policy-cookbook.md) | `taruvi-app-developer` |
+| "What's the signature of a function body?" | [`function-authoring.md`](function-authoring.md) | `taruvi-app-developer` |
+| "How does `sdk_client.database` work in a function?" | [`function-sdk-reference.md`](function-sdk-reference.md) | `taruvi-app-developer` |
+| "What meta options does Refine's dataProvider accept?" | refine provider references | `taruvi-refine-providers` |
+| "How do I wire authProvider?" | refine `auth-provider.md` | `taruvi-refine-providers` |
 | "What commands run the dev server?" | App's AGENTS.md | (per-app) |
 | "What tenant does this app belong to?" | App's AGENTS.md | (per-app) |
 | "How are entities named in this app?" | App's AGENTS.md | (per-app) |
@@ -66,13 +70,14 @@ Consuming Refine apps hard-wire a single app via `Client({ appSlug: "..." })`. I
 
 Taruvi intentionally splits:
 
-- **Control plane (MCP)**: `create_update_schema`, `manage_policies`, `manage_function`, `manage_secret_types`, `execute_raw_sql` — agent-time provisioning, may be destructive.
-- **Data plane (SDKs)**: CRUD on rows, file upload/download, function execution, policy checks — runtime consumption, never destroys schema.
+- **Control plane (MCP)**: `create_update_schema`, `manage_policies`, `manage_function`, `manage_secret_types`, `execute_raw_sql` — agent-time provisioning, may be destructive. Lives in `taruvi-app-developer`.
+- **Data plane (SDKs)**: CRUD on rows, file upload/download, function execution, policy checks — runtime consumption, never destroys schema. Lives in `taruvi-refine-providers` (frontend) and the function runtime (`taruvi-app-developer`, Python `sdk_client`).
 
 This is why you don't see `drop_table` in the JS SDK: schema mutations are control-plane by design. Keep this split in mind when deciding where to put logic:
 
-- Schema changes → MCP.
-- Row reads/writes → SDK (via Refine providers in frontend, direct SDK in function body).
+- Schema changes → MCP (this skill).
+- Row reads/writes from the browser → Refine providers (`taruvi-refine-providers`).
+- Row reads/writes from a function body → `sdk_client.database` (this skill, [`function-sdk-reference.md`](function-sdk-reference.md)).
 
 ## The fourth layer — AGENTS.md / CLAUDE.md
 
@@ -85,7 +90,7 @@ Per consuming app, an `AGENTS.md` at the repo root tells *any* agent (Claude Cod
 - Env vars
 - Skill references (which Taruvi skills to use for what)
 
-See the template in [agents-md-template.md](agents-md-template.md).
+See the template in [`agents-md-template.md`](agents-md-template.md).
 
 ## Failure mode: knowing where to put new information
 

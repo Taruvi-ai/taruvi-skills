@@ -42,7 +42,7 @@ Verification:
 
 ### Execute
 
-**Step 1: backend** (delegate to `taruvi-backend-provisioning`).
+**Step 1: backend** (delegate to `taruvi-app-developer`).
 
 1. Inspect existing `posts` and `authors` schemas:
    ```
@@ -115,7 +115,7 @@ Verification:
    })
    ```
 
-**Step 2: frontend** (delegate to `taruvi-refine-frontend`).
+**Step 2: frontend** (delegate to `taruvi-refine-providers`).
 
 Add `{ name: "comments" }` to `resources[]` in `App.tsx`. Then create `src/pages/comments/list.tsx` with `useList({ resource: "comments", filters: [{ field: "post_id", operator: "eq", value: postId }], meta: { allowedActions: ["update", "delete"] } })`. Embed in post show.
 
@@ -159,7 +159,7 @@ Verification:
 
 ### Execute
 
-**Step 1: register function metadata** (`taruvi-backend-provisioning`):
+**Step 1: register function metadata** (`taruvi-app-developer`):
 
 ```
 manage_function(action="create_update",
@@ -172,9 +172,9 @@ manage_function(action="create_update",
 )
 ```
 
-**Step 2: write body** (`taruvi-functions`):
+**Step 2: write body** (`taruvi-app-developer`, function-authoring section):
 
-Use Template 2 (scheduled cleanup) from [function-templates.md](../taruvi-functions/references/function-templates.md). Adapt:
+Use the scheduled-cleanup pattern from [`function-scenarios.md`](function-scenarios.md). Adapt:
 
 ```python
 from datetime import datetime, timedelta, timezone
@@ -201,7 +201,7 @@ def main(params, user_data, sdk_client):
     return {"status": "ok", "deleted": deleted}
 ```
 
-**Step 3: re-register with real body** (back to `taruvi-backend-provisioning`):
+**Step 3: re-register with real body** (back to `taruvi-app-developer`):
 
 ```
 manage_function(action="create_update",
@@ -210,7 +210,7 @@ manage_function(action="create_update",
 )
 ```
 
-**Step 4: test** (`taruvi-backend-provisioning`):
+**Step 4: test** (`taruvi-app-developer`):
 
 ```
 execute_function(function_slug="cleanup-expired-sessions", params={}, async_mode=False)
@@ -255,7 +255,7 @@ Verification:
 
 ### Execute
 
-**Step 1: modify `users` schema** (`taruvi-backend-provisioning`):
+**Step 1: modify `users` schema** (`taruvi-app-developer`):
 
 ```
 get_datatable_schema(table_name="users")   # inspect current
@@ -276,7 +276,7 @@ create_update_schema(datapackage={
 })
 ```
 
-**Step 2: create bucket** (`taruvi-backend-provisioning`):
+**Step 2: create bucket** (`taruvi-app-developer`):
 
 ```
 manage_storage(action="create_bucket",
@@ -287,7 +287,7 @@ manage_storage(action="create_bucket",
 )
 ```
 
-**Step 3: update policies** (`taruvi-backend-provisioning`):
+**Step 3: update policies** (`taruvi-app-developer`):
 
 Get current `datatable:users` policy, append an update rule:
 
@@ -322,7 +322,7 @@ manage_policies(action="create_update", policy_data={
 })
 ```
 
-**Step 4: build upload UI** (`taruvi-refine-frontend`):
+**Step 4: build upload UI** (`taruvi-refine-providers`):
 
 ```tsx
 import { useCreate, useUpdate, useGetIdentity } from "@refinedev/core";
