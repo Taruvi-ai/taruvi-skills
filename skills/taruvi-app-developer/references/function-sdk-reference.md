@@ -27,7 +27,7 @@ result = (
 
 **Filter operators:** `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `nin`, `between`, `nbetween`, `null` (isnull), `nnull`, `contains`, `ncontains`, `icontains`, `nicontains` (and the same `i*` / `*s` pattern for `startswith` / `endswith`), `search` (full-text on `search_vector` columns).
 
-String defaults are case-sensitive; prefix `i` for case-insensitive. Array operators: `acontains`, `acontainedby`, `aoverlap`, `aelement` (and `n*` negatives). JSONB operators: `contains`, `contained_by`, `has_key`, `has_any_keys`, `has_all_keys`.
+String defaults are case-sensitive; prefix `i` for case-insensitive. Array operators: `acontains`, `acontainedby`, `aoverlap`, `aelement` (and `n*` negatives).
 
 ### Filtering on related fields
 
@@ -48,15 +48,6 @@ result = sdk_client.database.from_("users").filter("roles.name", "in", ["admin",
 ```
 
 Sort works on dotted paths too: `.sort("company_id.name", "desc")`.
-
-### JSONB nested paths
-
-Dot notation also addresses JSONB keys:
-
-```python
-sdk_client.database.from_("orders").filter("metadata.color", "eq", "red").execute()
-sdk_client.database.from_("orders").filter("metadata", "contains", {"featured": True}).execute()
-```
 
 ### CRUD Helpers
 

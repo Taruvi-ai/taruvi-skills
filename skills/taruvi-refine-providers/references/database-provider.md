@@ -84,18 +84,16 @@ useList({
 
 Defaults: max **3 hops** per chain, max **5 distinct traversal paths** per request. Aggregations and traversal filters cannot be combined. Filters on the same FK path share one JOIN and are ANDed.
 
-### JSONB and array operators
+### Array operators
 
 ```tsx
 filters: [
-  { field: "metadata.color", operator: "eq", value: "red" },             // JSONB nested path
-  { field: "metadata", operator: "contains", value: { featured: true } }, // JSONB @>
-  { field: "tags", operator: "acontains", value: ["urgent"] },           // array contains
-  { field: "tags", operator: "aoverlap", value: ["urgent", "vip"] },     // array overlap
+  { field: "tags", operator: "acontains", value: ["urgent"] },        // array contains
+  { field: "tags", operator: "aoverlap", value: ["urgent", "vip"] },  // arrays overlap
 ];
 ```
 
-JSONB operators: `contains`, `contained_by`, `has_key`, `has_any_keys`, `has_all_keys`. Array operators: `acontains` / `nacontains`, `acontainedby` / `nacontainedby`, `aoverlap` / `naoverlap`, `aelement` / `naelement`.
+Array operators: `acontains` / `nacontains` (`@>`), `acontainedby` / `nacontainedby` (`<@`), `aoverlap` / `naoverlap` (`&&`), `aelement` / `naelement` (`= ANY()`).
 
 ### Full-text search
 

@@ -44,19 +44,6 @@ REST URL convention: `?field__operator=value` (double-underscore separates path 
 | `aoverlap` / `naoverlap` | `&&` |
 | `aelement` / `naelement` | `= ANY()` |
 
-### JSONB
-For JSONB columns, address nested keys with `__` and use these operators on the leaf:
-
-| Op | Meaning |
-|---|---|
-| `contains` | JSONB `@>` (object/array subset) — `?tags__contains=["featured"]` |
-| `contained_by` | JSONB `<@` |
-| `has_key` | Top-level key exists |
-| `has_any_keys` | Any of given keys exist |
-| `has_all_keys` | All given keys exist |
-
-Nested-path examples: `?metadata__color=red`, `?metadata__specs__weight__gt=100`.
-
 ## Filtering on related fields (dot notation)
 
 Traverse foreign-key or reverse relationships with `.` in the field path. The related row is **not** included in the response unless you also pass `populate=` for the same path.
