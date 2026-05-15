@@ -95,8 +95,8 @@ Updates preserve the slug; only mutable fields (text, description, tags, connect
 ## Consumption paths
 
 - **MCP**: `execute_query(query_slug, params)` — for agents and back-end scripts.
-- **Refine frontend**: `useCustom` with `meta.kind: "analytics"` via the `app` data provider. See the `taruvi-refine-frontend` skill.
-- **Python SDK (function body)**: `client.analytics.execute(query_slug, params)`. See the `taruvi-functions` skill.
+- **Refine frontend**: `useCustom` with `meta.kind: "analytics"` via the `app` data provider. See the `taruvi-refine-providers` skill.
+- **Python SDK (function body)**: `client.analytics.execute(query_slug, params)`. See [`function-sdk-reference.md`](function-sdk-reference.md).
 
 ## Common mistakes
 

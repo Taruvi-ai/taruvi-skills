@@ -13,10 +13,8 @@ Also create a `CLAUDE.md` at the root that imports from `AGENTS.md` for Claude C
 
 This app is built on **Taruvi** (a Django multi-tenant BaaS). Agents working in this repo should use the Taruvi skills for all backend and frontend work:
 
-- `taruvi-app-builder` — cross-layer feature work, greenfield scaffolds
-- `taruvi-backend-provisioning` — schema, policies, roles, function metadata, secrets via MCP
-- `taruvi-functions` — Python code that runs inside Taruvi function bodies
-- `taruvi-refine-frontend` — Refine.dev UI built with `@taruvi/refine-providers`
+- `taruvi-app-developer` — all backend work: schema, policies, roles, function metadata, secrets, analytics queries via MCP; Python function bodies that run in the Taruvi runtime
+- `taruvi-refine-providers` — Refine.dev UI built with `@taruvi/refine-providers` (data, storage, app, user, auth, access control)
 
 ## Stack
 
@@ -100,7 +98,8 @@ Agents should use the Taruvi MCP server for all backend provisioning. Connection
 ## Claude Code additions
 
 - For multi-file feature work, use plan mode first.
-- Prefer the `taruvi-app-builder` skill for features that cross layers.
+- For backend tasks (functions, schemas, policies, MCP calls) use the `taruvi-app-developer` skill.
+- For frontend tasks (Refine providers, hooks, UI) use the `taruvi-refine-providers` skill.
 - For changes under `src/resources/`, re-run `npm run typecheck` before finishing.
 - Use an Explore subagent when touching unfamiliar parts of the codebase.
 ```
