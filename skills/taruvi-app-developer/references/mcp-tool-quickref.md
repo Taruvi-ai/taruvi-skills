@@ -12,6 +12,9 @@ Upsert tables from a Frictionless Data Package. **Missing fields are dropped**, 
 
 ### `datatable_data(action, table_name, ...)`
 - `action="query"` → args: `filters` dict, `sort_by`, `order`, `limit` (default 100, cap 1000), `offset`, `populate`. Returns rows + pagination.
+  - `filters` keys use `field__operator` (e.g. `total__gte`, `status__in`, `metadata__color`).
+  - Related-field traversal via dot notation: `deal_id.name__contains`, `activities.subject__contains`. Max 3 hops, 5 distinct paths; not combinable with aggregation. See [`backend-capabilities.md`](backend-capabilities.md) for the full operator set.
+  - Aggregation is **not** available through this tool — use `manage_query` (analytics) or `execute_raw_sql`.
 - `action="upsert"` → args: `data` (dict or list), `unique_fields` (comma-sep conflict keys), `validate=True`, `partial=False`.
 - `action="delete"` → args: `ids` (scalar or list) **xor** `filters`. Exactly one of the two.
 

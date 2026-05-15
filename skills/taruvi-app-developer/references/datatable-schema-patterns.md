@@ -177,22 +177,24 @@ Creates a closure table. Query descendants/ancestors via `datatable_data` meta o
 
 Creates an `<table>_edges` companion table. Use `datatable_edges` to manipulate edges. Each edge has `from_id`, `to_id`, `type`, `metadata` (JSONB), `created_by_id`, `created_at`.
 
-### Advanced graph: inverse relationships and typed edge metadata
+### Advanced graph: inverse relationships, typed metadata, edge constraints
 
 ```json
 {
   "graph": {
     "enabled": true,
     "types": [
-      {"name": "manager", "inverse": "direct_reports"},
+      {"name": "manager", "inverse": "direct_reports", "constraints": {"max_outgoing": 1}},
       {"name": "mentor", "metadata": {"fields": [{"name": "since", "type": "date"}]}}
     ]
   }
 }
 ```
 
-- `inverse` — declares the reverse edge name (querying `direct_reports` of node X returns nodes where X is `manager`).
+- `inverse` — declares the reverse edge name. Semantic documentation only; actual traversal goes via `include=descendants|ancestors` plus the chosen `relationship_type`.
 - `metadata.fields` — typed fields stored on each edge of this type, queryable via `datatable_edges`.
+- `constraints.max_outgoing` / `constraints.max_incoming` — cap edges per node for this type (e.g. `max_outgoing: 1` enforces single-manager).
+- Graph traversal depth is bounded server-side by `DATA_SERVICE_GRAPH_MAX_DEPTH` (default 10).
 
 ## Column rename (`x-rename-from`)
 
