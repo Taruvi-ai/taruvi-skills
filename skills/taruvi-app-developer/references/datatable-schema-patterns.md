@@ -160,7 +160,7 @@ Only the primary key is auto-indexed. Add explicit entries for filter/sort/FK co
 
 ## Search (`search_fields`)
 
-Declare which fields participate in `?search=<query>`.
+Declare which fields participate in `?search=<query>`. **The search API silently returns nothing if `search_fields` isn't declared** — no `search_fields`, no `search_vector` column synthesized, no full-text matches. Always add this block to tables that need search.
 
 ```json
 "search_fields": [
