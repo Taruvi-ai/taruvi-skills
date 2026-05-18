@@ -129,27 +129,9 @@ Reverse relationships, one-to-many, and many-to-many are inferred from FKs at qu
 
 ## Reverse relationships & many-to-many
 
-`reverseRelationships` is **auto-computed** from declared FKs. Names follow PostgREST convention (child table name, e.g. `"employees"` on `departments`). When two FKs from the same child table point at the same parent, disambiguated with `!fk_column`: `"employees!secondary_dept_id"`.
+Both are inferred from declared FKs at query time — just declare your foreign keys (and a junction table with two FKs for M2M) and the data service exposes reverse and M2M paths automatically. No `reverseRelationships` or `manyToManyRelationships` block to write.
 
-Manual override (rare):
-
-```json
-"reverseRelationships": [
-  {"name": "employees", "type": "hasMany", "foreignTable": "people_employees",
-   "foreignKey": "department_id", "localKey": "id"}
-]
-```
-
-Declare `manyToManyRelationships` to make a junction populate-friendly:
-
-```json
-"manyToManyRelationships": [
-  {"name": "tags", "foreignTable": "people_tags",
-   "junctionTable": "people_item_tags",
-   "junctionLocalKey": "item_id", "junctionForeignKey": "tag_id",
-   "localKey": "id", "foreignKey": "id"}
-]
-```
+Reverse names follow PostgREST convention (the child table name; e.g. `"employees"` on `departments`). When two FKs from the same child point at the same parent, the auto-generated name is disambiguated with `!fk_column` (`"employees!secondary_dept_id"`).
 
 ## Indexes
 
@@ -448,18 +430,9 @@ A single datapackage exercising every supported attribute. Each numbered tag lik
         "search_fields": [
           {"field": "title", "weight": "A"},
           {"field": "body", "weight": "B"}
-        ],
-        "manyToManyRelationships": [                                        // [19]
-          {"name": "tags", "foreignTable": "blog_platform_tags",
-           "junctionTable": "blog_platform_post_tags",
-           "junctionLocalKey": "post_id", "junctionForeignKey": "tag_id",
-           "localKey": "id", "foreignKey": "id"}
-        ],
-        "reverseRelationships": [                                           // [20]
-          {"name": "comments", "type": "hasMany",
-           "foreignTable": "blog_platform_comments",
-           "foreignKey": "post_id", "localKey": "id"}
         ]
+        // tags (M2M via post_tags) and comments (hasMany via FK) are
+        // auto-inferred — no manyToManyRelationships / reverseRelationships block needed.
       }
     },
 
@@ -526,4 +499,4 @@ A single datapackage exercising every supported attribute. Each numbered tag lik
 }
 ```
 
-Inline `// [N]` markers point back to the corresponding section above for each feature: envelope/resource keys, `hierarchy`/`graph`, `audit_enabled`, field `format`/`constraints`/`default`/`arrayItem`/`x-pg-type`/`x-rename-from`, FKs with `x-actions` and cross-app `app:table` refs, system FK targets (`auth_user`, `storage_objects`), expression/partial/GIN indexes, weighted `search_fields`, `manyToManyRelationships`, `reverseRelationships` manual override, junction tables, composite `primaryKey`, and the `is_deleted` consumer convention.
+Inline `// [N]` markers point back to the corresponding section above for each feature: envelope/resource keys, `hierarchy`/`graph`, `audit_enabled`, field `format`/`constraints`/`default`/`arrayItem`/`x-pg-type`/`x-rename-from`, FKs with `x-actions` and cross-app `app:table` refs, system FK targets (`auth_user`, `storage_objects`), expression/partial/GIN indexes, weighted `search_fields`, junction tables, composite `primaryKey`, and the `is_deleted` consumer convention.
