@@ -285,22 +285,6 @@ Imports use the same Frictionless data package shape. `create_update_schema` alw
 
 Not a schema feature — just declare FKs. Consumers request expansion via `populate=order,order.customer`. Dots traverse nested FKs; `*` populates all one-hop FKs. **Max populate depth: 3.**
 
-## Limits
-
-| Limit | Setting | Default |
-|---|---|---|
-| Graph traversal depth | `DATA_SERVICE_GRAPH_MAX_DEPTH` | 10 |
-| Populate / embed nesting depth | `DATA_SERVICE_MAX_POPULATE_DEPTH` / `DATA_SERVICE_MAX_EMBED_DEPTH` | 3 |
-| Distinct FK traversal paths in filters | `DATA_SERVICE_MAX_FILTER_TRAVERSALS` | 5 |
-| Bulk upsert batch size | `DATA_SERVICE_MAX_BULK_UPSERT` | 1000 rows |
-| Bulk insert / update / delete batch size | `DATA_SERVICE_MAX_BULK_*` | configurable |
-| Max page size (list endpoints) | `DATA_SERVICE_MAX_PAGE_SIZE` | 1000 |
-| Rate limit (list) | `DATA_SERVICE_RATE_LIMIT_LIST` | 100/min |
-| Rate limit (list + populate) | `DATA_SERVICE_RATE_LIMIT_LIST_POPULATE` | 10/min |
-| `search_fields` count | — | 10 |
-| Physical table name | — | ≤57 bytes base (`_edges` suffix reserved) |
-| DDL statement timeout | — | ~30s |
-
 ## Common mistakes
 
 1. Omitting `primaryKey` (required on every table).
