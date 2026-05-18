@@ -221,15 +221,17 @@ No per-table `<table>_audit`, no row ETag / optimistic concurrency, no CDC / cha
 
 Resubmitting via `create_update_schema` (or `PATCH`) triggers a migration. Changes are classified:
 
-| Safe | Destructive — require `allow_data_loss=True` |
+| Safe | Destructive |
 |---|---|
 | Add nullable column | Add NOT NULL column without a default |
 | Add column with `default` | Narrow a column type (TEXT → VARCHAR(10)) |
-| Drop column (opt-in via the destructive flag) | Incompatible type cast (TEXT → INTEGER) |
+| Drop column | Incompatible type cast (TEXT → INTEGER) |
 | Make column nullable | Remove a NOT NULL constraint |
 | Widen a column type | |
 | Add foreign key, index | |
 | Rename column with `x-rename-from` | |
+
+**Destructive changes are rejected via MCP.** `create_update_schema` does not expose an `allow_data_loss` opt-in — to force one through you have to call the REST `PATCH` directly with `allow_data_loss=true`. Prefer reworking the schema (add a default, widen instead of narrowing, two-step migrate) over forcing it.
 
 ### Column rename
 
@@ -271,17 +273,13 @@ Not a schema feature — just declare FKs. Consumers request expansion via `popu
 
 1. Omitting `primaryKey` (required on every table).
 2. Renaming a column without `x-rename-from` (data is lost).
-3. Adding a required column to a populated table without a `default` (destructive without `allow_data_loss=True`).
+3. Adding a required column to a populated table without a `default` (classified destructive — rejected via MCP).
 4. Narrowing or changing a column type in place (destructive).
 5. FK to a not-yet-materialized table in the same datapackage — order `resources[]` so targets come first.
 6. Forgetting `indexes` on filter/FK columns — only the PK is auto-indexed.
 7. Declaring `search_vector` manually — it's synthesized.
 8. Using `jsonb` provider for an M2M junction (rejected).
 9. A name longer than ~57 bytes after `{app_slug}_` prefix.
-
-## Not implemented
-
-Don't try to use: Frictionless `uniqueKeys` (use a unique `indexes` entry instead), `missingValues`, `trueValues`/`falseValues`, `bareNumber`, `groupChar`, `decimalChar`, `dialect`; constraints `exclusiveMinimum`/`exclusiveMaximum`, `multipleOf`, `uniqueItems`; generic computed columns (only `search_vector`); MCP `dry_run`/`validate_only`/`force_recreate`/`allow_data_loss`; CDC / webhooks / row ETag.
 
 ## Comprehensive example
 
