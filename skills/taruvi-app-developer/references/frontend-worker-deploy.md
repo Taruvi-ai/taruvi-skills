@@ -4,10 +4,12 @@ Build the project, zip `dist/`, and deploy it to Taruvi Frontend Workers using t
 
 ## Workflow
 
-1. Read `.env` or `.env.local` to get `TARUVI_SITE_URL`, `TARUVI_API_KEY`, `TARUVI_APP_SLUG`
+1. Read `.env` or `.env.local` for: `TARUVI_SITE_URL`, `TARUVI_API_KEY`, `TARUVI_APP_SLUG`.
+   In older repos these may be called `VITE_TARUVI_BASE_URL`, `VITE_TARUVI_API_KEY`, `VITE_TARUVI_APP_SLUG`.
+
 2. Build the app: `npm run build`
 3. Zip the dist folder: `zip -r dist.zip dist/` (or use a zip tool on Windows)
-4. Run the deploy script (path relative to project root):
+4. Run the deploy script (path relative to project root, positional args: site URL, API key, app slug):
    ```bash
    node skills/taruvi-app-developer/scripts/deploy-frontend.js "$TARUVI_SITE_URL" "$TARUVI_API_KEY" "$TARUVI_APP_SLUG"
    ```
