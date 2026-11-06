@@ -149,11 +149,11 @@ useList({
   resource: "orders",
   meta: {
     aggregate: ["sum(total) as revenue", "count(*)", "avg(quantity)"],
-    groupBy: ["status", "date_trunc('month', created_at)"],
+    groupBy: ["status"],
     having: [{ field: "count", operator: "gt", value: 10 }],
   },
 });
-// → [{ status, sum_month, revenue, count, avg_quantity }, ...]
+// → [{ status, revenue, count, avg_quantity }, ...]
 ```
 
 Functions: `count(*)`, `count(field)`, `count(distinct field)`, `sum`, `avg`, `min`, `max`, `array_agg`, `string_agg`, `json_agg`, `stddev`, `variance`.
@@ -164,7 +164,21 @@ Response field naming: `<function>_<field>` (`sum(price)` → `sum_price`), `cou
 
 `having` references the **response field name** (`count`, `sum_total`), not the raw function (`sum(total)`).
 
-Restrictions: no nested aggregations, no window functions, no traversal filters in the same query. `aggregate` must be an array — `aggregate: "count"` fails silently.
+Restrictions: no nested aggregations, no window functions, no FK traversal in any aggregation slot — neither `groupBy`, the function argument inside `aggregate`, nor `filters` paired with aggregation. `aggregate` must be an array — `aggregate: "count"` fails silently.
+
+### Limits on `groupBy` and `aggregate` arguments
+
+- `groupBy` entries must be **bare column names of the base resource**. SQL expressions (`date_trunc(...)`, `extract(...)`) and `AS alias` clauses are split on commas and re-validated against the column list, so they shred — `"date_trunc('month', created_at) as month"` becomes `"date_trunc('month'"` + `"created_at) as month"`, neither a real column.
+- Inside `aggregate`, the wrapping function and its alias are fine (`sum(total) as revenue`, `count(distinct id)`); the function's **argument** still has to be a real column — `sum(date_trunc('month', x))` fails the same way.
+- **FK dot paths don't work in `groupBy`** either — only base-resource columns are validated, so `groupBy: ["invoice_id.property_id"]` returns `Invalid GROUP BY fields`. (`filters` and `sorters` do support dot paths.)
+- **Time-bucketed charts and parent rollups can't be expressed via the data provider.** Three workarounds, pick by reuse and size:
+  - **Analytics query** — register via `manage_query`, call via `useCustom({ dataProviderName: "app", meta: { kind: "analytics" } })`. Best when the chart is shared or the table is large.
+  - **Denormalized column** — add the bucket / parent FK on the child and populate at write time; then `groupBy: ["month"]` or `groupBy: ["property_id"]` works directly. See *When to denormalize* below.
+  - **Client-side bucketing** — `useList` with `pagination: { mode: "off" }` + `meta.select` to trim, bucket in React. Only for small datasets (≲ a few thousand rows).
+
+### When to denormalize a parent FK onto a child row
+
+If you keep reaching for FK dot-traversal in `groupBy` / `aggregate` / Cerbos checks against the same parent column, denormalize: add the parent column as a real FK on the child and copy it at write time. Then `useList`-level aggregation works directly, Cerbos resource policies can scope by the parent FK without `populate`, and `filters` stays cheap and indexable. Skip if the relationship can change (copy drifts), the chain length varies, or it's a one-off chart (an analytics query is the better trade). Rule: denormalize when the parent FK is load-bearing for queries (groupBy, row-level auth, list filters), not when it's just topologically related.
 
 ## Graph / hierarchy operations
 
