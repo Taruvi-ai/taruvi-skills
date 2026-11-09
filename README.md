@@ -55,6 +55,10 @@ Each skill follows the standard format:
 
 The `skills/` directory is auto-discovered by the `npx skills` CLI.
 
+## UTM Tracking
+
+https://taruvibase.com/?utm_source=github&utm_medium=readme&utm_campaign=taruvi-skills
+
 ## License
 
 MIT
