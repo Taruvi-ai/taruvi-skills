@@ -61,7 +61,7 @@ One call can create or update many tables.
 | `datetime` | `TIMESTAMP WITH TIME ZONE` | ISO 8601 |
 | `time` | `TIME` | |
 | `object` | `JSONB` | JSON object |
-| `array` | `JSONB` | JSON array; use `arrayItem` to declare element type |
+| `array` | native PG array — `TEXT[]` by default, or typed `<element>[]` via `arrayItem` | **Not JSONB.** Holds scalars only (strings, ints, uuids, …). For an array of objects, use `object` (JSONB) instead — a bare `array` column rejects dicts with a `can't adapt type 'dict'` error. |
 | `any` | `JSONB` (default) | Promote to native PG type via `x-pg-type` |
 
 **Range/multirange columns** — `type: "any"` + `x-pg-type`. Values: `int4range`, `int8range`, `numrange`, `daterange`, `tsrange`, `tstzrange`, plus the `*multirange` variants. Query with `__rcontains`, `__roverlaps`, `__rstrictleft`, etc.

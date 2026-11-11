@@ -82,37 +82,35 @@ Verification:
 
 3. Create the policy:
    ```
-   # MCP: save policy — Cerbos policy body (match the save tool's input schema)
+   # MCP: save policy — flat manage_policies shape (NOT the Cerbos apiVersion/resourcePolicy envelope)
    {
-     "apiVersion": "api.cerbos.dev/v1",
-     "resourcePolicy": {
-       "resource": "datatable:comments",
-       "version": "default",
-       "rules": [
-         {
-           "actions": ["read", "list"],
-           "effect": "EFFECT_ALLOW",
-           "roles": ["user"],
-           "condition": {"match": {"expr": "R.attr.approved == true"}}
-         },
-         {
-           "actions": ["read", "list"],
-           "effect": "EFFECT_ALLOW",
-           "roles": ["staff"]
-         },
-         {
-           "actions": ["create"],
-           "effect": "EFFECT_ALLOW",
-           "roles": ["user"]
-         },
-         {
-           "actions": ["update", "delete"],
-           "effect": "EFFECT_ALLOW",
-           "roles": ["user"],
-           "condition": {"match": {"expr": "R.attr.author_id == P.id"}}
-         }
-       ]
-     }
+     "policy_type": "resource",
+     "entity_type": "datatable",
+     "name": "comments",
+     "rules": [
+       {
+         "actions": ["read", "list"],
+         "effect": "EFFECT_ALLOW",
+         "roles": ["user"],
+         "condition": {"match": {"expr": "R.attr.approved == true"}}
+       },
+       {
+         "actions": ["read", "list"],
+         "effect": "EFFECT_ALLOW",
+         "roles": ["staff"]
+       },
+       {
+         "actions": ["create"],
+         "effect": "EFFECT_ALLOW",
+         "roles": ["user"]
+       },
+       {
+         "actions": ["update", "delete"],
+         "effect": "EFFECT_ALLOW",
+         "roles": ["user"],
+         "condition": {"match": {"expr": "R.attr.author_id == P.id"}}
+       }
+     ]
    }
    ```
 
@@ -303,26 +301,25 @@ Get current `datatable:users` policy, append an update rule:
 Create `bucket:user-avatars` policy:
 
 ```
-# MCP: save policy — Cerbos policy body (match the save tool's input schema)
+# MCP: save policy — flat manage_policies shape (NOT the Cerbos apiVersion/resourcePolicy envelope)
+# Buckets use entity_type "storage" (not "bucket"); name is the bucket slug.
 {
-  "apiVersion": "api.cerbos.dev/v1",
-  "resourcePolicy": {
-    "resource": "bucket:user-avatars",
-    "version": "default",
-    "rules": [
-      {
-        "actions": ["read", "write"],
-        "effect": "EFFECT_ALLOW",
-        "roles": ["user"],
-        "condition": {"match": {"expr": "R.attr.path.startsWith(string(P.id) + '/')"}}
-      },
-      {
-        "actions": ["read"],
-        "effect": "EFFECT_ALLOW",
-        "roles": ["staff"]
-      }
-    ]
-  }
+  "policy_type": "resource",
+  "entity_type": "storage",
+  "name": "user-avatars",
+  "rules": [
+    {
+      "actions": ["read", "write"],
+      "effect": "EFFECT_ALLOW",
+      "roles": ["user"],
+      "condition": {"match": {"expr": "R.attr.path.startsWith(string(P.id) + '/')"}}
+    },
+    {
+      "actions": ["read"],
+      "effect": "EFFECT_ALLOW",
+      "roles": ["staff"]
+    }
+  ]
 }
 ```
 

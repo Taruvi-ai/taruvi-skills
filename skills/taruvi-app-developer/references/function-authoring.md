@@ -25,6 +25,25 @@ def main(params, user_data, sdk_client):
 ```
 
 Any deviation from this signature causes an immediate `SandboxError` before any code runs.
+Extra parameters — including `*args` / `**kwargs` — are rejected; the signature must be
+exactly `main(params, user_data, sdk_client)`.
+
+### Sandbox limitations (RestrictedPython / Celery engine)
+
+Function bodies run under RestrictedPython, which forbids several ordinary Python
+constructs. These fail at compile/validation time or raise an opaque `NameError` at run
+time, so avoid them:
+
+- **No `class` statements** — defining a class raises `NameError: __metaclass__`. Use
+  plain functions and dicts instead of classes.
+- **No argument unpacking at call sites** — `f(*args)` / `f(**kwargs)` raises
+  `NameError: _apply_`. Pass arguments explicitly.
+- **No `eval()`, `exec()`, `next()`, or `iter()` builtins** — these are not in the
+  sandbox's allowed builtins. Iterate with `for` loops / comprehensions rather than
+  manual `next(iter(...))`.
+- **Permissions** — the injected `sdk_client` runs with the **calling user's**
+  permissions (including work it kicks off via async jobs), not elevated/service
+  permissions. A function cannot do anything the caller couldn't do directly.
 
 ### Injected `sdk_client` modules
 
