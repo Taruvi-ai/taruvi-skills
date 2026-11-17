@@ -30,20 +30,56 @@ exactly `main(params, user_data, sdk_client)`.
 
 ### Sandbox limitations (RestrictedPython / Celery engine)
 
-Function bodies run under RestrictedPython, which forbids several ordinary Python
-constructs. These fail at compile/validation time or raise an opaque `NameError` at run
-time, so avoid them:
+On the default Celery engine, function bodies run under **RestrictedPython**, which forbids
+several ordinary Python constructs. `eval` / `exec` are rejected at **save time** by the
+security scan; the rest are simply absent from the sandbox builtins and raise an opaque
+`NameError` at **run time**. Write to these limits — the newer runner engine executes
+ordinary Python in a kernel jail and lifts them, but code that avoids them runs on both:
 
-- **No `class` statements** — defining a class raises `NameError: __metaclass__`. Use
-  plain functions and dicts instead of classes.
+- **No `class` statements** — defining a class raises `NameError: __metaclass__` at run
+  time. Use plain functions and dicts instead of classes.
 - **No argument unpacking at call sites** — `f(*args)` / `f(**kwargs)` raises
-  `NameError: _apply_`. Pass arguments explicitly.
-- **No `eval()`, `exec()`, `next()`, or `iter()` builtins** — these are not in the
-  sandbox's allowed builtins. Iterate with `for` loops / comprehensions rather than
-  manual `next(iter(...))`.
-- **Permissions** — the injected `sdk_client` runs with the **calling user's**
-  permissions (including work it kicks off via async jobs), not elevated/service
-  permissions. A function cannot do anything the caller couldn't do directly.
+  `NameError: _apply_` at run time. Pass arguments explicitly, e.g. `f(a, b)` or
+  `dict(a=1, b=2)`.
+- **No `next()` or `iter()` builtins** — not in the sandbox's allowed builtins. Iterate
+  with `for` loops / comprehensions instead of manual `next(iter(...))`; use `seq[0]` for
+  the first element.
+- **No `eval()` / `exec()`** — rejected at save time. There is no supported alternative,
+  by design.
+
+Separately, extra parameters on `main` itself — including `*args` / `**kwargs` **in the
+signature** — are rejected at save time by the signature check, before any code runs. That
+is a different mechanism from the call-site unpacking above: the signature check is a
+save-time rejection, call-site unpacking is a run-time `NameError`.
+
+### `sdk_client` execution identity and permissions
+
+The injected `sdk_client` is **not** a privileged service account. It authenticates with a
+short-lived SYSTEM token minted **for the calling user** — their identity is preserved — or
+for the **function's creator** on scheduled runs and anonymous calls to a public function
+(an anonymous caller supplies no identity of its own). Running a function grants no resource
+access the token's user doesn't already have: a datatable, storage or policy operation the
+caller couldn't perform directly is **denied the same way inside the function** (the server
+authorizes it against that same principal). Treat an authorization failure as expected
+behavior, not a function bug:
+
+```python
+def main(params, user_data, sdk_client):
+    # If the calling user lacks read access to this table, the SDK call is rejected
+    # (HTTP 403 / FORBIDDEN, surfaced as an SDK error). The function cannot read it on
+    # the caller's behalf. Let it propagate, or handle it explicitly:
+    try:
+        rows = sdk_client.database.from_("payroll").execute()
+    except Exception as exc:
+        log("payroll read denied", level="warning", data={"error": str(exc)})
+        return {"ok": False, "error": "not authorized"}
+    return {"ok": True, "count": len(rows)}
+```
+
+**One deliberate exception — secrets.** The SYSTEM token bypasses the per-user secret
+permission and sensitivity checks, so `sdk_client.secrets.get(...)` can read `sensitive`
+secrets the caller could **not** read directly. Treat secret values as privileged: never
+return them to the caller or write them into a result the caller can read.
 
 ### Injected `sdk_client` modules
 
