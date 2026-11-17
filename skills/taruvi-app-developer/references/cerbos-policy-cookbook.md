@@ -14,37 +14,45 @@ Taruvi policies come in three flavors:
 
 ## Resource policy shape
 
+> **Use the flat `manage_policies` shape, NOT the raw Cerbos envelope.** The MCP
+> `manage_policies(action="create_update")` tool takes a top-level object with
+> `policy_type` / `entity_type` / `name` / `rules`. It **rejects** the
+> `{ "apiVersion": "...", "resourcePolicy": { ... } }` envelope you see in Cerbos'
+> own docs with `name: This field is required` / `rules is required`.
+
 ```json
 {
-  "apiVersion": "api.cerbos.dev/v1",
-  "resourcePolicy": {
-    "resource": "datatable:orders",
-    "version": "default",
-    "rules": [
-      {
-        "actions": ["read"],
-        "effect": "EFFECT_ALLOW",
-        "roles": ["viewer", "editor"]
-      },
-      {
-        "actions": ["update", "delete"],
-        "effect": "EFFECT_ALLOW",
-        "roles": ["editor"],
-        "condition": {
-          "match": {
-            "expr": "R.attr.owner_id == P.id"
-          }
+  "policy_type": "resource",
+  "entity_type": "datatable",
+  "name": "orders",
+  "rules": [
+    {
+      "actions": ["read"],
+      "effect": "EFFECT_ALLOW",
+      "roles": ["viewer", "editor"]
+    },
+    {
+      "actions": ["update", "delete"],
+      "effect": "EFFECT_ALLOW",
+      "roles": ["editor"],
+      "condition": {
+        "match": {
+          "expr": "R.attr.owner_id == P.id"
         }
       }
-    ]
-  }
+    }
+  ]
 }
 ```
 
 Key bits:
 
-- `resource` — string identifier. Convention: `datatable:<table_name>` for datatables, `bucket:<slug>` for buckets, `function:<slug>` for functions, `query:<slug>` for analytics queries.
-- `version` — usually `"default"`; use other versions for staged rollouts.
+- `policy_type` — `"resource"` (default), `"principal"`, `"role"`, or `"derived_role"`.
+- `entity_type` + `name` — together form the resource identifier (`entity_type:name`).
+  Conventions: `datatable` + `<table_name>`, `storage` + `<bucket_slug>`,
+  `function` + `<slug>`, `query` + `<slug>`. `entity_type` is required for resource policies.
+- Do **not** send `apiVersion`, `resourcePolicy`, `resource`, or `version` — version is
+  managed by the platform (always `default`); passing the envelope keys fails validation.
 - `rules[]` — list of `{actions, effect, roles, condition?, derivedRoles?}`.
 - `roles[]` — use each role's bare `name` (e.g. `Admin`), NOT its app-scoped slug (e.g. `hrapp-admin`). This is the one spot the "use the slug" convention doesn't apply; the slug matches nothing, so every request is denied. Get `name` from the role list or role create response.
 - `condition.match.expr` — CEL expression. `P` is the principal, `R` is the resource, `request.aux` is auxiliary data.
@@ -54,45 +62,42 @@ Key bits:
 
 ```json
 {
-  "apiVersion": "api.cerbos.dev/v1",
-  "principalPolicy": {
-    "principal": "alice",
-    "version": "default",
-    "rules": [
-      {
-        "resource": "datatable:orders",
-        "actions": [
-          {"action": "delete", "effect": "EFFECT_DENY"}
-        ]
-      }
-    ]
-  }
+  "policy_type": "principal",
+  "name": "alice",
+  "rules": [
+    {
+      "resource": "datatable:orders",
+      "actions": [
+        {"action": "delete", "effect": "EFFECT_DENY"}
+      ]
+    }
+  ]
 }
 ```
 
-Use sparingly — prefer role-based rules in resource policies.
+`name` is the principal id. Use sparingly — prefer role-based rules in resource policies.
 
 ## Derived roles
 
 ```json
 {
-  "apiVersion": "api.cerbos.dev/v1",
-  "derivedRoles": {
-    "name": "common_roles",
-    "definitions": [
-      {
-        "name": "owner",
-        "parentRoles": ["user"],
-        "condition": {
-          "match": {
-            "expr": "R.attr.owner_id == P.id"
-          }
+  "policy_type": "derived_role",
+  "name": "common_roles",
+  "definitions": [
+    {
+      "name": "owner",
+      "parentRoles": ["user"],
+      "condition": {
+        "match": {
+          "expr": "R.attr.owner_id == P.id"
         }
       }
-    ]
-  }
+    }
+  ]
 }
 ```
+
+Derived roles use `definitions[]` instead of `rules[]`. `name` is the derived-role policy name.
 
 Reference via `derivedRoles: ["owner"]` inside a resource policy rule. Store derived role policies separately and import.
 
